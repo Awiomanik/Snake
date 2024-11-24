@@ -28,8 +28,5 @@
 *.out
 *.app
 
-# User generated data
-*.dat
-
 # VScode
 *.vscode
