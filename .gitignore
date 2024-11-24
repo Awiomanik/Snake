@@ -30,3 +30,6 @@
 
 # User generated data
 *.dat
+
+# VScode
+*.vscode
