@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "Snake_classes.h"
+#include "resource.h"
 
 using namespace std;
 
@@ -18,18 +19,17 @@ Intro::Intro() { hanInt = GetStdHandle(STD_OUTPUT_HANDLE);}
 //INTRO DESTRUCTOR
 Intro::~Intro() {}
 //THX INTRO
-void Intro::displayTHX()
-{
+void Intro::displayTHX() {
         system("color 8f");
-        cout << "\n\n\n\n\n\n\n\n\n\t\t\t\t\t     THX\n\t\t\t\t\tsound system";
-        PlaySound(TEXT("C:\\Program Files\\Snake\\Sounds\\THX.wav"),NULL,SND_SYNC);
+        cout << "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\t\t\t\t\t\t\t\t\t     THX\n\t\t\t\t\t\t\t\t\tsound system";
+        PlaySound(MAKEINTRESOURCE(IDR_WAVE4), GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
         system("cls");
         system("color 0a");
 }
 //SNAKE INTRO (TITLE SCREEN)
 void Intro::displayTitle() {
     SetConsoleTextAttribute(hanInt, 10);
-    PlaySound(TEXT("C:\\Program Files\\Snake\\Sounds\\Snejk.wav"),NULL,SND_ASYNC);
+    PlaySound(MAKEINTRESOURCE(IDR_WAVE3), GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
     cout << endl;
     Sleep(500);
     cout << "   o o O";
@@ -42,7 +42,7 @@ void Intro::displayTitle() {
     cout << "       o   o   o   o   o     o o     o o " << endl;
     cout << "   o o o   o   o   o o o o   o   o   o o o" << endl;
     Sleep(3000);
-    PlaySound(TEXT("C:\\Program Files\\Snake\\Sounds\\keyboard_sound.wav"),NULL,SND_ASYNC);
+    PlaySound(MAKEINTRESOURCE(IDR_WAVE2), GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
     cout << "\n\n";
     SetConsoleTextAttribute(hanInt, 2);
     cout << "                W";
@@ -51,7 +51,7 @@ void Intro::displayTitle() {
         cout.flush(); 
         Sleep(100);
     }
-    PlaySound(TEXT("C:\\Program Files\\Snake\\Sounds\\WK-K_Studios.wav"),NULL,SND_SYNC);
+    PlaySound(MAKEINTRESOURCE(IDR_WAVE5), GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
     SetConsoleTextAttribute(hanInt, 120);
     setCoursorVisability(false);
     cout << "\n\n\n\n\n\n\nPRESS ANY BUTTON TO CONTINUE\r";
@@ -336,7 +336,7 @@ void CLASSIC::logic(bool wheaterMapHasTorusTopology) {
 
     // Fruit eaten
     if (x == fruitX && y == fruitY){
-        PlaySound(TEXT("C:\\Program Files\\Snake\\Sounds\\chrup.wav"), NULL, SND_ASYNC);
+        PlaySound(MAKEINTRESOURCE(IDR_WAVE1), GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
         score += 10;
         fruitX = rand() % mapWidth;
         fruitY = rand() % mapHeight;

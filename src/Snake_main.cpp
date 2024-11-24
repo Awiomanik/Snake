@@ -42,10 +42,18 @@ void hideScrollBar(){
 }
 // SET CONSOLE WINDOW TO FULL-SCREEN MODE
 void setFullScreen(){
-    keybd_event(VK_MENU, 0x38, 0, 0);
-    keybd_event(VK_RETURN, 0x1c, 0, 0);
-    keybd_event(VK_RETURN, 0X1c, KEYEVENTF_KEYUP, 0);
-    keybd_event(VK_MENU, 0x38, KEYEVENTF_KEYUP, 0);
+    HWND hwnd = GetConsoleWindow();
+    
+    if (hwnd == NULL) {
+        cerr << "Failed to get console window handle.\n";
+        return;
+    }
+
+    // Remove window decorations and set fullscreen style
+    SetWindowLong(hwnd, GWL_STYLE, WS_POPUP);
+    SetWindowPos(hwnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), 
+                 GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
+    ShowWindow(hwnd, SW_MAXIMIZE);
 }
 // CHANGE SIZE OF COURSOR
 void setCoursorSize(int size)
