@@ -25,7 +25,7 @@ IF ERRORLEVEL 1 (
 
 :: Compile the program
 ECHO Compiling the Snake game...
-g++ -static -o Snake src/Snake_main.cpp src/Snake_ciala.cpp src/Snake_res.o -lwinmm
+g++ src/*.cpp src/Snake_res.o -o Snake.exe -lwinmm -lgdi32
 IF ERRORLEVEL 1 (
     ECHO Compilation failed. Check your source files for errors.
     PAUSE 
@@ -70,13 +70,13 @@ IF /i "%run_choice%"=="y" (
     START "" "%cd%\Snake.exe"
 ) ELSE IF /i "%run_choice%"=="n" (
     ECHO You can run the game later by executing Snake.exe.
+    :: Finish
+    ECHO.
+    ECHO Setup complete! Thank you for using the Snake Setup Wizard.
+    PAUSE 
 ) ELSE (
     ECHO Invalid input. Please enter 'y' or 'n'.
     GOTO run_prompt
 )
 
-:: Finish
-ECHO.
-ECHO Setup complete! Thank you for using the Snake Setup Wizard.
-PAUSE 
 EXIT /b
