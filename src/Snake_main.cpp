@@ -6,12 +6,14 @@ int main(){
     bool finnished = false;
 
     // Preparation of the console
-    hideScrollBar();
-    setFullScreen();
-    setCoursorSize(1);
+    COORD consoleBufferSize = prepareConsole();
+    for (int i=0; i < consoleBufferSize.X; i++) { std::cout << "x\n"; }
+    std::cout << consoleBufferSize.X << " " << consoleBufferSize.Y;
+    int x;
+    std::cin >> x;
     
     // INTRO
-    Intro introScreen;
+    Intro introScreen(consoleBufferSize);
     introScreen.displayTHX();
     introScreen.displayTitle();
 
@@ -55,26 +57,89 @@ void setFullScreen(){
                  GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
     ShowWindow(hwnd, SW_MAXIMIZE);
 }
-// CHANGE SIZE OF COURSOR
-void setCoursorSize(int size)
-{
+// CHANGE SIZE OF COURSOR OR HIDE IT
+void setCursorSize(int size, bool visible) {
     HANDLE han = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_CURSOR_INFO info;
 
-    GetConsoleCursorInfo(han, &info);
-    info.dwSize = size;
-    SetConsoleCursorInfo(han, &info);
+    if (!GetConsoleCursorInfo(han, &info)) {
+        std::cerr << "Failed to get console cursor info.\n";
+        return;
+    }
+
+    info.dwSize = (size < 1 ? 1 : (size > 100 ? 100 : size)); // Clamp size to valid range (1-100)
+    info.bVisible = visible;  // Set visibility
+    if (!SetConsoleCursorInfo(han, &info)) {
+        std::cerr << "Failed to set console cursor info.\n";
+    }
 }
-// HIDE THE COURSOR
-void setCoursorVisability(bool visability)
-{
-    HANDLE han = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_CURSOR_INFO info;
+// SET FONT SIZE
+void setFontSize(int width, int height) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hConsole == INVALID_HANDLE_VALUE) {
+        std::cerr << "Failed to get console handle.\n";
+        return;
+    }
 
-    GetConsoleCursorInfo(han, &info);
-    info.dwSize = 1;
-    info.bVisible = visability;
-    SetConsoleCursorInfo(han, &info);
+    CONSOLE_FONT_INFOEX fontInfo = {0};
+    fontInfo.cbSize = sizeof(fontInfo);
+
+    // Get current font info
+    if (!GetCurrentConsoleFontEx(hConsole, FALSE, &fontInfo)) {
+        std::cerr << "Failed to get console font info.\n";
+        return;
+    }
+
+    // Set new font size
+    fontInfo.dwFontSize.X = width;   // Character width
+    fontInfo.dwFontSize.Y = height; // Character height
+    if (!SetCurrentConsoleFontEx(hConsole, FALSE, &fontInfo)) {
+        std::cerr << "Failed to set console font size.\n";
+        return;
+    }
 }
+// GET MAXIMUM BUFFER SIZE THAT WILL NOT EXCEED THE SCREEN DIMENTIONS
+COORD getMaxBufferSize(int fontWidth, int fontHeight) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hConsole == INVALID_HANDLE_VALUE) {
+        std::cerr << "Failed to get console handle.\n";
+        return {0, 0};
+    }
 
+    // Get screen resolution
+    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
+    // Calculate visible rows and columns
+    COORD visibleSize = {
+        static_cast<SHORT>(screenWidth / fontWidth),  // Columns
+        static_cast<SHORT>(screenHeight / fontHeight) // Rows
+    };
+
+    return visibleSize;
+}
+// SET BUFFER SIZE
+void setBufferSize(COORD size) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hConsole == INVALID_HANDLE_VALUE) {
+        std::cerr << "Failed to get console handle.\n";
+        return;
+    }
+
+    if (!SetConsoleScreenBufferSize(hConsole, size)) {
+        std::cerr << "Failed to set screen buffer size.\n";
+    }
+}
+// SET ALL THE CONSOLE ATRIBUTES FOR THE PROGRAMM
+COORD prepareConsole(){
+    int fontWidth = 20;
+    int fontHeight = 20;
+    setFullScreen();
+    setFontSize(fontWidth, fontHeight);
+    COORD maxSize = getMaxBufferSize(fontWidth, fontHeight);
+    setBufferSize(maxSize);
+    setCursorSize(1, false);
+    hideScrollBar();
+
+    return maxSize;
+}

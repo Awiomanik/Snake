@@ -15,14 +15,25 @@ using namespace std;
 
 //INTRO
 //INTRO CONSTRUCTOR
-Intro::Intro() { hanInt = GetStdHandle(STD_OUTPUT_HANDLE);}
+Intro::Intro(COORD bufferSize) : bufferSize(bufferSize) { hanInt = GetStdHandle(STD_OUTPUT_HANDLE);}
 //INTRO DESTRUCTOR
 Intro::~Intro() {}
 //THX INTRO
 void Intro::displayTHX() {
+        system("cls");
         system("color 8f");
-        cout << "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\t\t\t\t\t\t\t\t\t     THX\n\t\t\t\t\t\t\t\t\tsound system";
+
+        int n = bufferSize.X / 2;
+        int s = bufferSize.Y / 2;
+
+        cout << string(n - 1, '\n');
+        cout << string(s - 1, ' ');
+        cout << "THX" << endl;
+        cout << string(s - 3, ' ');
+        cout << "sound system";
+
         PlaySound(MAKEINTRESOURCE(IDR_WAVE4), GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
+        
         system("cls");
         system("color 0a");
 }
@@ -46,6 +57,7 @@ void Intro::displayTitle() {
     cout << "\n\n";
     SetConsoleTextAttribute(hanInt, 2);
     cout << "                W";
+    setCursorSize(50, true);
     for (char c : "K-K STUDIOS"){
         cout << c;
         cout.flush(); 
@@ -53,7 +65,7 @@ void Intro::displayTitle() {
     }
     PlaySound(MAKEINTRESOURCE(IDR_WAVE5), GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
     SetConsoleTextAttribute(hanInt, 120);
-    setCoursorVisability(false);
+    setCursorSize(1, false);
     cout << "\n\n\n\n\n\n\nPRESS ANY BUTTON TO CONTINUE\r";
     Sleep(500);
 
@@ -81,7 +93,6 @@ Menu::~Menu() {}
 //DISPLAY MENU
 void Menu::displayMenu() {
     //TITLE
-    setCoursorVisability(false);
     system("color 0a");
     SetConsoleTextAttribute(handle, 10);
     cout << endl;
@@ -95,7 +106,6 @@ void Menu::displayMenu() {
     cout << "       o   o   o   o   o     o o     o o " << endl;
     cout << "   o o o   o   o   o o o o   o   o   o o o" << endl << endl;
     cout << "                    MENU" << endl << endl;
-    setCoursorVisability(false);
 
     //OPTIONS
     switch (current_position)

@@ -13,8 +13,11 @@ using namespace std;
 // DECLARATIONS OF USED FUNCTIONS
 void hideScrollBar();
 void setFullScreen();
-void setCoursorSize(int size);
-void setCoursorVisability(bool visability);
+void setCursorSize(int size, bool visible);
+void setFontSize(int width, int height);
+COORD getMaxBufferSize(int fontWidth, int fontHeight);
+void setBufferSize(COORD size);
+COORD prepareConsole();
 
 // DECLARATIONS OF CLASSES
 class Intro;
@@ -28,10 +31,11 @@ class Intro {
 protected :
     // ATRIBUTES
     HANDLE hanInt;
+    COORD bufferSize;
 
 public :
     // METHODS
-    Intro();
+    Intro(COORD bufferSize);
     ~Intro();
     void displayTHX();
     void displayTitle();
