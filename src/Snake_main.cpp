@@ -7,7 +7,7 @@ int main(){
 
     // Preparation of the console
     COORD consoleBufferSize = prepareConsole();
-    for (int i=0; i < consoleBufferSize.X; i++) { std::cout << "x\n"; }
+    for (int i=0; i < consoleBufferSize.Y; i++) { std::cout << "x\n"; }
     std::cout << consoleBufferSize.X << " " << consoleBufferSize.Y;
     int x;
     std::cin >> x;
@@ -110,13 +110,31 @@ COORD getMaxBufferSize(int fontWidth, int fontHeight) {
     int screenWidth = GetSystemMetrics(SM_CXSCREEN);
     int screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
-    // Calculate visible rows and columns
-    COORD visibleSize = {
-        static_cast<SHORT>(screenWidth / fontWidth),  // Columns
-        static_cast<SHORT>(screenHeight / fontHeight) // Rows
+    // Get console dimentions
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    if (!GetConsoleScreenBufferInfo(hConsole, &csbi)) {
+        std::cerr << "Failed to get console screen buffer info.\n";
+        return {0, 0};
+    }
+    COORD bufferSize = {
+        csbi.srWindow.Right - csbi.srWindow.Left + 1, // Visible columns
+        csbi.srWindow.Bottom - csbi.srWindow.Top + 1  // Visible rows
     };
 
-    return visibleSize;
+    // Calculate gap
+    std::cout << screenHeight << ' ' << fontHeight;
+    COORD gap = {
+        static_cast<SHORT>(screenWidth / bufferSize.X - fontWidth),
+        static_cast<SHORT>(screenHeight / bufferSize.Y - fontHeight)
+    };
+
+    // Calculate number of rows and columns on the screen
+    COORD bufferSizeInt = {
+        static_cast<short>(screenWidth / (fontWidth + gap.X)),
+        static_cast<short>(screenHeight / (fontHeight + gap.Y))
+    };
+
+    return bufferSizeInt;
 }
 // SET BUFFER SIZE
 void setBufferSize(COORD size) {
