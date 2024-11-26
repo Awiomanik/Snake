@@ -7,26 +7,20 @@ int main(){
 
     // Preparation of the console
     COORD consoleBufferSize = prepareConsole();
-    for (int i=0; i < consoleBufferSize.Y; i++) { std::cout << "x\n"; }
-    std::cout << consoleBufferSize.X << " " << consoleBufferSize.Y;
-    int x;
-    std::cin >> x;
     
     // INTRO
     Intro introScreen(consoleBufferSize);
-    introScreen.displayTHX();
-    introScreen.displayTitle();
+    //introScreen.displayTHX();
+    //introScreen.displayTitle();
 
     //MENU
-    while(!finnished){
-        Menu menuScreen;
-        finnished = menuScreen.runMenu();
-    }
+    Menu menuScreen;
+    while(!finnished) { finnished = menuScreen.runMenu(); }
     
     //HIGHSCORES
-    HIGHSCORES highscoresScreen;
-    highscoresScreen.readScores("CLASSIC");
-    highscoresScreen.displayScores();
+    //HIGHSCORES highscoresScreen;
+    //highscoresScreen.readScores("CLASSIC");
+    //highscoresScreen.displayScores();
     return 0;
 }
 
@@ -58,7 +52,7 @@ void setFullScreen(){
     ShowWindow(hwnd, SW_MAXIMIZE);
 }
 // CHANGE SIZE OF COURSOR OR HIDE IT
-void setCursorSize(int size, bool visible) {
+void setCursorSize(short size, bool visible) {
     HANDLE han = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_CURSOR_INFO info;
 
@@ -68,13 +62,13 @@ void setCursorSize(int size, bool visible) {
     }
 
     info.dwSize = (size < 1 ? 1 : (size > 100 ? 100 : size)); // Clamp size to valid range (1-100)
-    info.bVisible = visible;  // Set visibility
+    info.bVisible = visible;
     if (!SetConsoleCursorInfo(han, &info)) {
         std::cerr << "Failed to set console cursor info.\n";
     }
 }
 // SET FONT SIZE
-void setFontSize(int width, int height) {
+void setFontSize(short width, short height) {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hConsole == INVALID_HANDLE_VALUE) {
         std::cerr << "Failed to get console handle.\n";
@@ -84,22 +78,18 @@ void setFontSize(int width, int height) {
     CONSOLE_FONT_INFOEX fontInfo = {0};
     fontInfo.cbSize = sizeof(fontInfo);
 
-    // Get current font info
-    if (!GetCurrentConsoleFontEx(hConsole, FALSE, &fontInfo)) {
-        std::cerr << "Failed to get console font info.\n";
-        return;
-    }
+    // Set the font name
+    wcscpy_s(fontInfo.FaceName, L"Consolas");
 
-    // Set new font size
+    // Set font size
     fontInfo.dwFontSize.X = width;   // Character width
     fontInfo.dwFontSize.Y = height; // Character height
     if (!SetCurrentConsoleFontEx(hConsole, FALSE, &fontInfo)) {
         std::cerr << "Failed to set console font size.\n";
-        return;
     }
 }
 // GET MAXIMUM BUFFER SIZE THAT WILL NOT EXCEED THE SCREEN DIMENTIONS
-COORD getMaxBufferSize(int fontWidth, int fontHeight) {
+COORD getMaxBufferSize(short fontWidth, short fontHeight) { 
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hConsole == INVALID_HANDLE_VALUE) {
         std::cerr << "Failed to get console handle.\n";
@@ -117,12 +107,12 @@ COORD getMaxBufferSize(int fontWidth, int fontHeight) {
         return {0, 0};
     }
     COORD bufferSize = {
-        csbi.srWindow.Right - csbi.srWindow.Left + 1, // Visible columns
-        csbi.srWindow.Bottom - csbi.srWindow.Top + 1  // Visible rows
+        static_cast<SHORT>(csbi.srWindow.Right - csbi.srWindow.Left), // Visible columns
+        static_cast<SHORT>(csbi.srWindow.Bottom - csbi.srWindow.Top) // Visible rows
     };
 
+
     // Calculate gap
-    std::cout << screenHeight << ' ' << fontHeight;
     COORD gap = {
         static_cast<SHORT>(screenWidth / bufferSize.X - fontWidth),
         static_cast<SHORT>(screenHeight / bufferSize.Y - fontHeight)
@@ -149,15 +139,19 @@ void setBufferSize(COORD size) {
     }
 }
 // SET ALL THE CONSOLE ATRIBUTES FOR THE PROGRAMM
-COORD prepareConsole(){
-    int fontWidth = 20;
-    int fontHeight = 20;
-    setFullScreen();
+COORD prepareConsole() {
+    short fontWidth = 80;
+    short fontHeight = 80;
     setFontSize(fontWidth, fontHeight);
+    setFullScreen();
     COORD maxSize = getMaxBufferSize(fontWidth, fontHeight);
     setBufferSize(maxSize);
     setCursorSize(1, false);
     hideScrollBar();
 
     return maxSize;
+}
+// WRITE TO CONSOLE AT A GIVEN COORDINATES (INDEXING FROM 1 !)
+void write(int x, int y, const string& message) {
+    std::cout << "\033[" << y << ";" << x << "H" << message;
 }

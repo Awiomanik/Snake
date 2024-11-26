@@ -13,11 +13,12 @@ using namespace std;
 // DECLARATIONS OF USED FUNCTIONS
 void hideScrollBar();
 void setFullScreen();
-void setCursorSize(int size, bool visible);
-void setFontSize(int width, int height);
-COORD getMaxBufferSize(int fontWidth, int fontHeight);
+void setCursorSize(short size, bool visible);
+void setFontSize(short width, short height);
+COORD getMaxBufferSize(short fontWidth, short fontHeight);
 void setBufferSize(COORD size);
 COORD prepareConsole();
+void write(int x, int y, const string& message);
 
 // DECLARATIONS OF CLASSES
 class Intro;

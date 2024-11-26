@@ -23,14 +23,11 @@ void Intro::displayTHX() {
         system("cls");
         system("color 8f");
 
-        int n = bufferSize.X / 2;
-        int s = bufferSize.Y / 2;
+        int x = bufferSize.X / 2 - 3;
+        int y = bufferSize.Y / 2 - 3;
 
-        cout << string(n - 1, '\n');
-        cout << string(s - 1, ' ');
-        cout << "THX" << endl;
-        cout << string(s - 3, ' ');
-        cout << "sound system";
+        write(x, y, "T H X");
+        write(x - 4, y + 2, "sound system");
 
         PlaySound(MAKEINTRESOURCE(IDR_WAVE4), GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
         
@@ -39,23 +36,37 @@ void Intro::displayTHX() {
 }
 //SNAKE INTRO (TITLE SCREEN)
 void Intro::displayTitle() {
-    SetConsoleTextAttribute(hanInt, 10);
+    int GREEN = 10;
+    int RED = 12;
+    int DARK_GREEN = 2;
+    int WHITE = 15;
+    int WHITE_B = 120;
+    
+    // Snake
     PlaySound(MAKEINTRESOURCE(IDR_WAVE3), GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
+
+    SetConsoleTextAttribute(hanInt, GREEN);
     cout << endl;
     Sleep(500);
     cout << "   o o O";
-    SetConsoleTextAttribute(hanInt, 12);
+
+    SetConsoleTextAttribute(hanInt, RED);
     cout << "~";
-    SetConsoleTextAttribute(hanInt, 10);
+
+    SetConsoleTextAttribute(hanInt, GREEN);
     cout << "                    o" << endl;
     cout << "   o                         o" << endl;
     cout << "   o o o   o o o   o o o     o   o   o o o" << endl;
     cout << "       o   o   o   o   o     o o     o o " << endl;
     cout << "   o o o   o   o   o o o o   o   o   o o o" << endl;
+    
     Sleep(3000);
+    
+    // Keyboard
     PlaySound(MAKEINTRESOURCE(IDR_WAVE2), GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
+    
     cout << "\n\n";
-    SetConsoleTextAttribute(hanInt, 2);
+    SetConsoleTextAttribute(hanInt, DARK_GREEN);
     cout << "                W";
     setCursorSize(50, true);
     for (char c : "K-K STUDIOS"){
@@ -63,21 +74,23 @@ void Intro::displayTitle() {
         cout.flush(); 
         Sleep(100);
     }
-    PlaySound(MAKEINTRESOURCE(IDR_WAVE5), GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
-    SetConsoleTextAttribute(hanInt, 120);
-    setCursorSize(1, false);
-    cout << "\n\n\n\n\n\n\nPRESS ANY BUTTON TO CONTINUE\r";
-    Sleep(500);
 
-    //OCEKIWANIE NA GRACZA
-    while (true)
-    {
-        SetConsoleTextAttribute(hanInt, 15);
+    // WKK-STUDIOS
+    PlaySound(MAKEINTRESOURCE(IDR_WAVE5), GetModuleHandle(NULL), SND_RESOURCE | SND_SYNC);
+
+    SetConsoleTextAttribute(hanInt, WHITE_B);
+    setCursorSize(1, false);
+    cout << "\n\n\n\n\n\n\n";
+    while (true){
+        SetConsoleTextAttribute(hanInt, WHITE);
         cout << "PRESS ANY BUTTON TO CONTINUE\r";
         Sleep(500);
-        SetConsoleTextAttribute(hanInt, 120);
+        if(kbhit()) break;
+
+        SetConsoleTextAttribute(hanInt, WHITE_B);
         cout << "PRESS ANY BUTTON TO CONTINUE\r";
         Sleep(500);
+
         if(kbhit()) break;
     }
     getch();
@@ -198,11 +211,16 @@ void Menu::getInput()
 //MENU MAIN LOOP
 bool Menu::runMenu() {
     while(true){
+        // run menu loop
         while(!selection_happened){
             displayMenu();
             getInput();
         }
+        
+        // run option
         executeOption();
+
+        // reset variables
         selection_happened = false;
         current_position = 1;
         key_pressed = 0;
