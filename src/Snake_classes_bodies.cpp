@@ -100,7 +100,21 @@ void Intro::displayTitle() {
 //MENU
 //MENU CONSTRUCTOR
 Menu::Menu():
-handle(GetStdHandle(STD_OUTPUT_HANDLE)), selection_happened(false), current_position(1), key_pressed(0){}
+handle(GetStdHandle(STD_OUTPUT_HANDLE)), selection_happened(false), current_position(1), 
+key_pressed(0), previous_option(0) {
+    options = {
+        "1.CLASSIC",
+        "2.ARCADE (STILL IN DEVELOPMENT)",
+        "3.TWO PLAYERS (COOPERATION) (STILL IN DEVELOPMENT)",
+        "4.TWO PLAYERS (LAST-ONE-STANDING) (STILL IN DEVELOPMENT)",
+        "5.HIGH-SCORES (STILL IN DEVELOPMENT)",
+        "6.CREDITS (STILL IN DEVELOPMENT)",
+        "7.CONTROLS AND INSTRUCTION (STILL IN DEVELOPMENT)",
+        "8.EXIT"
+    };
+    option_colors = {15, 14, 9, 4, 6, 7, 8, 12};
+    option_colors_chosen = {240, 224, 144, 64, 96, 112, 128, 192};
+}
 //MENU DESTRUCTOR
 Menu::~Menu() {}
 //DISPLAY MENU
@@ -121,37 +135,26 @@ void Menu::displayMenu() {
     cout << "                    MENU" << endl << endl;
 
     //OPTIONS
-    switch (current_position)
-    {
-        case 1 :
-        displayOptions({240, 14, 9, 4, 6, 7, 8, 12});
-        break;
-        case 2 :
-        displayOptions({15, 224, 9, 4, 6, 7, 8, 12});
-        break;
-        case 3 :
-        displayOptions({15, 14, 144, 4, 6, 7, 8, 12});
-        break;
-        case 4 :
-        displayOptions({15, 14, 9, 64, 6, 7, 8, 12});
-        break;
-        case 5 :
-        displayOptions({15, 14, 9, 4, 96, 7, 8, 12});
-        break;
-        case 6 :
-        displayOptions({15, 14, 9, 4, 6, 112, 8, 12});
-        break;
-        case 7 :
-        displayOptions({15, 14, 9, 4, 6, 7, 128, 12});
-        break;
-        case 8 :
-        displayOptions({15, 14, 9, 4, 6, 7, 8, 192});
-        break;
-        default:
-        break;
+    displayOptions();
+}
+//DISPLAY MNEU OPTIONS
+void Menu::displayOptions()
+{
+    SetConsoleTextAttribute(handle, 240);
+    cout << options[0]<< endl << endl;
+
+    for (size_t i = 1; i < options.size(); ++i) {
+        SetConsoleTextAttribute(handle, option_colors[i]);
+        cout << options[i] << endl << endl;
     }
-    
-    // GET OPTIONS
+
+    // Reset color and display navigation instructions
+    SetConsoleTextAttribute(handle, 2);
+    std::cout << "(use up and down arrows to move around the menu, use right arrow to select an option)";
+}
+//EVALUATE INPUT
+bool Menu::parseInput() {
+    // Get input
     while(key_pressed == 0){
         if(kbhit()){
             key_pressed = _getch();
@@ -162,69 +165,84 @@ void Menu::displayMenu() {
             key_pressed = _getch();
         }
     };
-}
-//DISPLAY MNEU OPTIONS
-void Menu::displayOptions(const vector<int>& colors)
-{
-    std::vector<std::string> options = {
-        "1.CLASSIC",
-        "2.ARCADE (STILL IN DEVELOPMENT)",
-        "3.TWO PLAYERS (COOPERATION) (STILL IN DEVELOPMENT)",
-        "4.TWO PLAYERS (LAST-ONE-STANDING) (STILL IN DEVELOPMENT)",
-        "5.HIGH-SCORES (STILL IN DEVELOPMENT)",
-        "6.CREDITS (STILL IN DEVELOPMENT)",
-        "7.CONTROLS AND INSTRUCTION (STILL IN DEVELOPMENT)",
-        "8.EXIT"
-    };
-
-    for (size_t i = 0; i < options.size(); ++i) {
-        SetConsoleTextAttribute(handle, colors[i]);
-        std::cout << options[i] << std::endl << std::endl;
-    }
-
-    // Reset color and display navigation instructions
-    SetConsoleTextAttribute(handle, 2);
-    std::cout << "(use up and down arrows to move around the menu, use right arrow to select an option)";
-}
-//GET MENU INPUT
-void Menu::getInput()
-{
-    system("cls");
+    
+    // parse input
     switch (key_pressed)
     {
+        // Arrow DOWN
         case 72:
+        previous_option = current_position;
         current_position--;
-        if(current_position<1) current_position = 8;
-        break;
+        if(current_position < 1) current_position = 8;
+        key_pressed = 0;
+        return true;
+
+        // Arrow UP
         case 80:
+        previous_option = current_position;
         current_position++;
-        if(current_position>8) current_position = 1;
-        break;
+        if(current_position > 8) current_position = 1;
+        key_pressed = 0;
+        return true;
+
+        // Arrow right
         case 77 :
         selection_happened = true;
-        break;
+        return false;
+
         default :
-        break;
+        return false;
     }
-    key_pressed = 0;
 }
+//GET INPUT AND UPDATE SELECTED OPTION
+void Menu::updateMenu(){
+    // Prevoius podition
+    int prevoius_option_index = previous_option - 1;
+    int current_option_index = current_position - 1;
+
+    // Get index of last position in previous option string
+    int previous_option_length = options[prevoius_option_index].length();
+    int row = 10 + 2 * prevoius_option_index; // 8 rows for title and then every other
+
+    // clean the prevoius position row
+    SetConsoleTextAttribute(handle, option_colors[prevoius_option_index]);
+    for (int x = previous_option_length; x > 0; x--){
+        write(x, row, "\b");
+        write(x, row, string(1, options[prevoius_option_index][x - 1]));
+    }
+
+    int current_option_length = options[current_option_index].length();
+    row = 10 + 2 * current_option_index;
+
+    // check new row
+    SetConsoleTextAttribute(handle, option_colors_chosen[current_option_index]);
+    for (int x = 1; x <= current_option_length; x++){
+        write(x, row, "\b");
+        write(x, row, string(1, options[current_option_index][x - 1]));
+    }
+}
+
 //MENU MAIN LOOP
 bool Menu::runMenu() {
+    // main programm loop
     while(true){
-        // run menu loop
+        displayMenu();
+
+        // menu loop
         while(!selection_happened){
-            displayMenu();
-            getInput();
+            if(parseInput()) updateMenu();
         }
         
         // run option
         executeOption();
 
         // reset variables
+        previous_option = 0;
         selection_happened = false;
         current_position = 1;
         key_pressed = 0;
     }
+    return true;
 }
 //EXECUTE CHOOSEN OPTION
 bool Menu::executeOption() {

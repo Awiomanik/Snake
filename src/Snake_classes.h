@@ -45,9 +45,13 @@ public :
 class Menu {
 public :
     HANDLE handle;
+    int previous_option;
     int key_pressed;
     int current_position;
     bool selection_happened;
+    vector<std::string> options;
+    vector<short> option_colors;
+    vector<short> option_colors_chosen;
 
     friend class CLASSIC;
     friend class HIGHSCORES;
@@ -56,9 +60,10 @@ public :
     Menu();
     ~Menu();
     void displayMenu();
-    void getInput();
+    bool parseInput();
+    void updateMenu();
     bool runMenu();
-    void displayOptions(const vector<int>& colors);
+    void displayOptions();
     bool executeOption();
 };
 
