@@ -100,25 +100,32 @@ void Intro::displayTitle() {
 //MENU
 //MENU CONSTRUCTOR
 Menu::Menu():
-handle(GetStdHandle(STD_OUTPUT_HANDLE)), selection_happened(false), current_position(1), 
-key_pressed(0), previous_option(0) {
+handle(GetStdHandle(STD_OUTPUT_HANDLE)), selection_happened(false), current_option(0), 
+key_pressed(0), previous_option(-1) {
     options = {
-        "1.CLASSIC",
-        "2.ARCADE (STILL IN DEVELOPMENT)",
-        "3.TWO PLAYERS (COOPERATION) (STILL IN DEVELOPMENT)",
-        "4.TWO PLAYERS (LAST-ONE-STANDING) (STILL IN DEVELOPMENT)",
-        "5.HIGH-SCORES (STILL IN DEVELOPMENT)",
-        "6.CREDITS (STILL IN DEVELOPMENT)",
-        "7.CONTROLS AND INSTRUCTION (STILL IN DEVELOPMENT)",
-        "8.EXIT"
+        "CLASSIC",
+        "ARCADE (STILL IN DEVELOPMENT)",
+        "TWO PLAYERS (COOPERATION) (STILL IN DEVELOPMENT)",
+        "TWO PLAYERS (LAST-ONE-STANDING) (STILL IN DEVELOPMENT)",
+        "HIGH-SCORES (STILL IN DEVELOPMENT)",
+        "CREDITS (STILL IN DEVELOPMENT)",
+        "CONTROLS AND INSTRUCTION (STILL IN DEVELOPMENT)",
+        "EXIT"
     };
+    amount_of_options = options.size();
     option_colors = {15, 14, 9, 4, 6, 7, 8, 12};
     option_colors_chosen = {240, 224, 144, 64, 96, 112, 128, 192};
 }
 //MENU DESTRUCTOR
 Menu::~Menu() {}
+// CLIP TO AMOUNT OF OPTIONS
+int Menu::clip(int num) { 
+    return ((num % amount_of_options) + amount_of_options) % amount_of_options; 
+}
 //DISPLAY MENU
 void Menu::displayMenu() {
+    system("cls");
+
     //TITLE
     system("color 0a");
     SetConsoleTextAttribute(handle, 10);
@@ -150,43 +157,42 @@ void Menu::displayOptions()
 
     // Reset color and display navigation instructions
     SetConsoleTextAttribute(handle, 2);
-    std::cout << "(use up and down arrows to move around the menu, use right arrow to select an option)";
+    std::cout << endl << "Navigate the menu using the [UP] and [DOWN] arrows,"
+              << endl << "and press [ENTER] to select an option.";
 }
 //EVALUATE INPUT
 bool Menu::parseInput() {
     // Get input
-    while(key_pressed == 0){
-        if(kbhit()){
-            key_pressed = _getch();
-            if (key_pressed != 0 && key_pressed != 224){
-                key_pressed = _getch();
-                key_pressed = 0;
+    while (key_pressed == 0) {
+        if (_kbhit()) {  // Check if a key is pressed
+            key_pressed = _getch(); // Get the first character of input
+
+            // Handle special keys (arrows, function keys)
+            if (key_pressed == 224 || key_pressed == 0) {
+                key_pressed = _getch(); // Get the second character for special keys
             }
-            key_pressed = _getch();
         }
-    };
+    }
     
-    // parse input
+    // Parse input
     switch (key_pressed)
     {
         // Arrow DOWN
         case 72:
-        previous_option = current_position;
-        current_position--;
-        if(current_position < 1) current_position = 8;
+        previous_option = current_option;
+        current_option = clip(current_option - 1);
         key_pressed = 0;
         return true;
 
         // Arrow UP
         case 80:
-        previous_option = current_position;
-        current_position++;
-        if(current_position > 8) current_position = 1;
+        previous_option = current_option;
+        current_option = clip(current_option + 1);
         key_pressed = 0;
         return true;
 
-        // Arrow right
-        case 77 :
+        // Enter key
+        case 13 :
         selection_happened = true;
         return false;
 
@@ -196,36 +202,37 @@ bool Menu::parseInput() {
 }
 //GET INPUT AND UPDATE SELECTED OPTION
 void Menu::updateMenu(){
-    // Prevoius podition
-    int prevoius_option_index = previous_option - 1;
-    int current_option_index = current_position - 1;
-
     // Get index of last position in previous option string
-    int previous_option_length = options[prevoius_option_index].length();
-    int row = 10 + 2 * prevoius_option_index; // 8 rows for title and then every other
+    int previous_option_length = options[previous_option].length();
+    int row = 10 + 2 * previous_option; // 8 rows for title and then every other
 
     // clean the prevoius position row
-    SetConsoleTextAttribute(handle, option_colors[prevoius_option_index]);
+    SetConsoleTextAttribute(handle, option_colors[previous_option]);
     for (int x = previous_option_length; x > 0; x--){
-        write(x, row, "\b");
-        write(x, row, string(1, options[prevoius_option_index][x - 1]));
+        write(x, row, string(1, options[previous_option][x - 1]));
     }
 
-    int current_option_length = options[current_option_index].length();
-    row = 10 + 2 * current_option_index;
+    // current position
+    int current_option_length = options[current_option].length();
+    row = 10 + 2 * current_option;
 
     // check new row
-    SetConsoleTextAttribute(handle, option_colors_chosen[current_option_index]);
+    SetConsoleTextAttribute(handle, option_colors_chosen[current_option]);
     for (int x = 1; x <= current_option_length; x++){
-        write(x, row, "\b");
-        write(x, row, string(1, options[current_option_index][x - 1]));
+        write(x, row, string(1, options[current_option][x - 1]));
     }
 }
-
 //MENU MAIN LOOP
-bool Menu::runMenu() {
+void Menu::runMenu() {
     // main programm loop
     while(true){
+        // reset variables
+        previous_option = -1;
+        selection_happened = false;
+        current_option = 0;
+        key_pressed = 0;
+
+        // display initial menu
         displayMenu();
 
         // menu loop
@@ -234,67 +241,78 @@ bool Menu::runMenu() {
         }
         
         // run option
-        executeOption();
-
-        // reset variables
-        previous_option = 0;
-        selection_happened = false;
-        current_position = 1;
-        key_pressed = 0;
+        if (executeOption()) break;
     }
-    return true;
 }
 //EXECUTE CHOOSEN OPTION
 bool Menu::executeOption() {
-    switch (current_position){
-        case 1 :{
-            CLASSIC c;
-            c.gameplay();
+    switch (current_option + 1){
+        
+        // CLASSIC - MODE
+        case 1 : {
+            CLASSIC classic;
+            classic.gameplay();
             return false;
             break;
         }
-        case 8 :{
-            EXIT e;
-            return e.Exit();
+
+        // HIGH - SCORES
+        case 5: {
+            HIGHSCORES highscores;
+            highscores.readScores("CLASSIC");
+            highscores.displayScores();
+        }
+
+        // EXIT    
+        case 8 : { 
+            EXIT exit;
+            return exit.Exit();
             break;
         }
-        default :
+
+        // NOT IMPLEMENTED YET
+        default :{
             system("cls");
             cout << "Unfortunately this option is still under development.\n"
                 << "You'll be send back to main menu in a few seconds";
             Sleep(3000);
             return NULL;
             break;
+        }
     }
 }
 
 //CLASSIC
 //CLASSIC-MODE GAME CONSTRUCTOR
-CLASSIC::CLASSIC(int mapWidth, int mapHeight, int snakeTempo, int tailLen): 
+CLASSIC::CLASSIC(int mapWidth, int mapHeight, int snakeTempo): 
 mapWidth(mapWidth), mapHeight(mapHeight), tempo(snakeTempo), 
-tailLen(tailLen), gameOver(false), digesting(false) {}
+snake_coords({COORD(mapWidth / 2 - mapWidth % 2, mapHeight / 2 - mapHeight % 2)}), 
+gameOver(false), digesting(false) {}
 //CLASSIC-MODE GAME DESTRUCTOR
 CLASSIC::~CLASSIC() {}
 // GAMEPLAY
 void CLASSIC::gameplay() {
+    // preparation
     setup ();
+    initial_draw();
+
+    // gameplay loop
     while (!gameOver){
         draw();
         input();
         logic();
         Sleep(tempo);
     }
+
+    // final screen
     system("cls");
     cout << "GAME OVER" << endl << endl << "YOUR SCORE : " << score << endl;
-    getch();
+    _getch();
 }
 //GAMEPLAY SETUP
 void CLASSIC::setup() {
     current_direction = STOP;
     future_direction = STOP;
-
-    x = mapWidth / 2 - mapWidth % 2;
-    y = mapHeight / 2 - mapHeight % 2;
 
     fruitX = rand() % mapWidth;
     fruitY  = rand() % mapHeight;
@@ -302,20 +320,14 @@ void CLASSIC::setup() {
     score = 0;
 
     system("color 07");
-
-    for (int i=0; i<100; i++){
-        tailX[i]=101;
-        tailY[i]=101;
-    }
 }
 //GAME ENGINE
 void CLASSIC::logic(bool wheaterMapHasTorusTopology) {
-    int prevoiusX = tailX[0];
-    int prevoiusY = tailY[0];
+    int prevoiusX = snake_coords[0].X;
+    int prevoiusY = snake_coords[0].Y;
     int prePrevoiusX, prePrevoiusY;
 
-    tailX[0]=x;
-    tailY[0]=y;
+    // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE pop element from vector and move further
 
     // move tail
     for(int i = 1; i < tailLen; i++){
@@ -434,43 +446,39 @@ void CLASSIC::input() {
         }
     }
 }
-//DRAWING THE GAMEPLAY
-void CLASSIC::draw() {
+//DRAWING INITIAL FRAME
+void CLASSIC::initial_draw() {
     system("cls");
 
     // First row
-    for(int i = 0; i<mapWidth+2;i++) { cout << "# "; }
+    for(int i = 0; i < mapWidth + 2; i++) { cout << "# "; }
     cout << endl;
 
     // map and columns
-    for(int i = 0; i<mapHeight ;i++){
-        for(int j = 0; j<mapWidth ;j++){
-        // first column
-        if (j==0) { cout << "# "; }
-        // map
-        if (j==x && i==y) { cout << "O "; }
-        else if (j==fruitX && i==fruitY) { cout << "Q "; }
-        else{
-            bool wyswietlonoOgon = false;
-            for(int k = 0; k<tailLen; k++){
-                if(tailX[k] == j && tailY[k] == i){
-                    cout <<"o ";
-                    wyswietlonoOgon=true;
-                }
-            }
-            if(!wyswietlonoOgon) { cout << "  "; }
+    for(int i = 0; i < mapHeight; i++){
+        for(int j = 0; j < mapWidth; j++){
+            // first column
+            if (j == 0) { cout << "# "; }
+
+            // map
+            if (j == x && i == y) { cout << "O "; }
+            else if (j == fruitX && i == fruitY) { cout << "Q "; }
+            else { cout << "  "; }
+
+            //last column
+            if(j == mapWidth - 1) { cout << "# "; } cout << endl;
         }
-        //last column
-        if(j==mapWidth-1) { cout << "# "; }
-        
-        } cout << endl;
     }
     
     // last row
-    for(int i = 0; i<mapWidth+2;i++) { cout << "# "; }
+    for(int i = 0; i < mapWidth + 2; i++) { cout << "# "; }
     
     // score
-    cout << endl << endl << "YOUR SCORE : " << score;
+    cout << endl << endl << "YOUR SCORE : 0";
+}
+//DRAWING THE GAMEPLAY
+void CLASSIC::draw() {
+
 }
 
 //HIGHSCORES
@@ -547,7 +555,7 @@ void HIGHSCORES::displayScores() {
         std::cout << i + 1 << "  " << names[i] << " : " << scores[i] << "\n";
     }
 
-    getch();
+    system("pause");
 }
 //SAVE HIGHSCORES TO A FILE
 void HIGHSCORES::saveScores(const string& mode) {

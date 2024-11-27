@@ -15,12 +15,8 @@ int main(){
 
     //MENU
     Menu menuScreen;
-    while(!finnished) { finnished = menuScreen.runMenu(); }
+    menuScreen.runMenu();
     
-    //HIGHSCORES
-    //HIGHSCORES highscoresScreen;
-    //highscoresScreen.readScores("CLASSIC");
-    //highscoresScreen.displayScores();
     return 0;
 }
 

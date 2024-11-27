@@ -47,9 +47,10 @@ public :
     HANDLE handle;
     int previous_option;
     int key_pressed;
-    int current_position;
+    int current_option;
     bool selection_happened;
     vector<std::string> options;
+    int amount_of_options;
     vector<short> option_colors;
     vector<short> option_colors_chosen;
 
@@ -60,41 +61,41 @@ public :
     Menu();
     ~Menu();
     void displayMenu();
+    int clip(int num);
     bool parseInput();
     void updateMenu();
-    bool runMenu();
+    void runMenu();
     void displayOptions();
     bool executeOption();
 };
 
 class CLASSIC {
 public :
-    //ATRYBUTY OGONA
+    //SNAKE ATRIBUTES
     int tailLen;
-    int tailX [100];
-    int tailY [100];
+    vector<COORD> snake_coords;
     bool digesting;
+    enum direction current_direction;
+    enum direction future_direction;
 
-    //ATRYBUTY MAPY
+    //MAP ATRIBUTES
     int tempo;
     int mapWidth;
     int mapHeight;
     bool gameOver;
-    int x, y, fruitX, fruitY;
+    int fruitX, fruitY;
     float score;
     enum direction {STOP = 0, LEFT, RIGHT, UP, DOWN};
-    enum direction current_direction;
-    enum direction future_direction;
-    int tailIterator;
 
     friend class Menu;
     friend class HIGHSCORES;
 
-    CLASSIC(int mapWidth = 10, int mapHeight = 10, int snakeTempo = 100, int tailLen = 0);
+    CLASSIC(int mapWidth = 10, int mapHeight = 20, int snakeTempo = 40);
     ~CLASSIC();
     void gameplay();
     void setup();
     void logic(bool wheaterMapHasTorusTopology = true);
+    void initial_draw();
     void draw();
     void input();
 };
