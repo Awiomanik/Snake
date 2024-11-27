@@ -284,10 +284,9 @@ bool Menu::executeOption() {
 
 //CLASSIC
 //CLASSIC-MODE GAME CONSTRUCTOR
-CLASSIC::CLASSIC(int mapWidth, int mapHeight, int snakeTempo): 
-mapWidth(mapWidth), mapHeight(mapHeight), tempo(snakeTempo), 
-snake_coords({COORD(mapWidth / 2 - mapWidth % 2, mapHeight / 2 - mapHeight % 2)}), 
-gameOver(false), digesting(false) {}
+CLASSIC::CLASSIC(short mapWidth, short mapHeight, short snakeTempo): 
+mapWidth(mapWidth), mapHeight(mapHeight), tempo(snakeTempo), gameOver(false),
+snake_coords({COORD{(short)(mapWidth / 2 - mapWidth % 2), (short)(mapHeight / 2 - mapHeight % 2)}}) {}
 //CLASSIC-MODE GAME DESTRUCTOR
 CLASSIC::~CLASSIC() {}
 // GAMEPLAY
@@ -298,9 +297,8 @@ void CLASSIC::gameplay() {
 
     // gameplay loop
     while (!gameOver){
-        draw();
+        draw(logic());
         input();
-        logic();
         Sleep(tempo);
     }
 
@@ -312,137 +310,117 @@ void CLASSIC::gameplay() {
 //GAMEPLAY SETUP
 void CLASSIC::setup() {
     current_direction = STOP;
-    future_direction = STOP;
 
-    fruitX = rand() % mapWidth;
-    fruitY  = rand() % mapHeight;
+    fruit_coords = { (short)(rand() % mapWidth), (short)(rand() % mapHeight) };
 
     score = 0;
 
     system("color 07");
 }
 //GAME ENGINE
-void CLASSIC::logic(bool wheaterMapHasTorusTopology) {
-    int prevoiusX = snake_coords[0].X;
-    int prevoiusY = snake_coords[0].Y;
-    int prePrevoiusX, prePrevoiusY;
+redraw CLASSIC::logic(bool wheaterMapHasTorusTopology) {
+    // Initialize vector of elements to be redawn
+    redraw elements;
 
-    // HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE HERE pop element from vector and move further
+    // Get head
+    COORD head = snake_coords[0];
 
-    // move tail
-    for(int i = 1; i < tailLen; i++){
-            prePrevoiusX=tailX[i];
-            prePrevoiusY=tailY[i];
-
-            tailX[i]=prevoiusX;
-            tailY[i]=prevoiusY;
-
-            prevoiusX=prePrevoiusX;
-            prevoiusY=prePrevoiusY;
-    }
-
-    // check directions
-    switch(current_direction){
-    case LEFT:
-        if(future_direction == RIGHT){
-            current_direction = future_direction;
-            x++;
-        } else x--;
-        break;
+    // Check directions
+    switch (current_direction){
+        case LEFT:
+            head.X--;
+            break;
 
         case RIGHT:
-        if(future_direction == LEFT){
-            current_direction = future_direction;
-            x--;
-        } else x++;
-        break;
+            head.X++;
+            break;
 
-    case DOWN:
-        if(future_direction == UP){
-            current_direction = future_direction;
-            y--;
-        } else y++;
-        break;
+        case DOWN:
+            head.Y++;
+            break;
 
-    case UP:
-        if(future_direction == DOWN){
-            current_direction = future_direction;
-            y++;
-        } else y--;
-        break;
+        case UP:
+            head.Y--;
+            break;
 
-    default:
-        break;
+        default:
+            break;
     }
 
-    // borders
-    if(wheaterMapHasTorusTopology){
-        if (x>=mapWidth) x=0; else if (x<0) x=mapWidth-1;
-        if (y>=mapHeight) y=0; else if (y<0) y=mapHeight-1;
+    // Borders
+    if (wheaterMapHasTorusTopology){
+        if (head.X >= mapWidth) head.X = 0; 
+        else if (head.X < 0) head.X = mapWidth - 1;
 
-    }else{
-        if (mapWidth<(x+1) || x < 0 || (y+1)>mapHeight || y < 0)
-        gameOver=true;
+        if (head.Y >= mapHeight) head.Y = 0; 
+        else if (head.Y < 0) head.Y = mapHeight - 1;
+
+    } else{
+        if (mapWidth < (head.X + 1) || head.X < 0 || 
+            (head.Y + 1) > mapHeight || head.Y < 0)
+        gameOver = true;
     }
 
     // Whether snake bit himself
-    for(int i = 0; i< tailLen; i++)
-    {
-        if(tailX[i] == x && tailY[i] == y)
-            gameOver=true;
+    for (auto segment = snake_coords.begin() + 1; segment != snake_coords.end(); segment++) {
+        if (segment->X == head.X && segment->Y == head.Y) {
+            gameOver = true;
+            break;
+        }
     }
 
     // Fruit eaten
-    if (x == fruitX && y == fruitY){
+    if (head.X == fruit_coords.X && head.Y == fruit_coords.Y) {
         PlaySound(MAKEINTRESOURCE(IDR_WAVE1), GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
-        score += 10;
-        fruitX = rand() % mapWidth;
-        fruitY = rand() % mapHeight;
-
-        for (tailIterator=0; tailIterator<mapWidth; tailIterator++){
-            if(fruitX == tailX[tailIterator] && fruitY == tailY[tailIterator]){
-                fruitX = rand() % mapWidth;
-                tailIterator = 0;
-            }
-        }
-        for (tailIterator=0;tailIterator<mapWidth;tailIterator++){
-            if(fruitY == tailY[tailIterator] && fruitY == tailY[tailIterator]){
-                fruitY  = rand() % mapHeight;
-                tailIterator = 0;
-            }
-        }
         
+        elements.push_back({{fruit_coords.X, fruit_coords.Y}, "  "});
+        fruit_coords = { (short)(rand() % mapWidth), (short)(rand() % mapHeight) };
+        elements.push_back({{fruit_coords.X, fruit_coords.Y}, "Q "});
+
+        score += 10;
         tailLen++;
-        digesting = true;
+
+    } else {
+        // Do not pop tail end if fruit was eaten
+        elements.push_back({{snake_coords.back().X, snake_coords.back().Y}, "xx"});
+        snake_coords.pop_back();
     }
+
+    // Move snake
+    elements.push_back({{snake_coords[0].X, snake_coords[0].Y}, "o "});
+    snake_coords.insert(snake_coords.begin(), head);
+    elements.push_back({{head.X, head.Y}, "O "});
+
+    //Sleep(1500);
+    //for (auto element : elements){
+    //    cout << endl << endl <<element.first.X << " x " << element.first.Y << ",  " << element.second << endl;}
+    //Sleep(2000);
+
+    return elements;
 }
 //GET USER INPUT
 void CLASSIC::input() {
     if (_kbhit()){
-        switch(getch()){
+        switch(_getch()){
             case 'a':
-            future_direction = current_direction;
-            current_direction = LEFT;
-            break;
+                if (current_direction != RIGHT) current_direction = LEFT;
+                break;
 
             case 'd':
-            future_direction = current_direction;
-            current_direction = RIGHT;
-            break;
+                if (current_direction != LEFT) current_direction = RIGHT;
+                break;
 
             case 'w':
-            future_direction = current_direction;
-            current_direction = UP;
-            break;
+                if (current_direction != DOWN) current_direction = UP;
+                break;
 
             case 's':
-            future_direction = current_direction;
-            current_direction = DOWN;
-            break;
+                if (current_direction != UP) current_direction = DOWN;
+                break;
 
             case 'x':
-            gameOver = true;
-            break;
+                gameOver = true;
+                break;
         }
     }
 }
@@ -455,18 +433,21 @@ void CLASSIC::initial_draw() {
     cout << endl;
 
     // map and columns
+    short headX = snake_coords[0].X;
+    short headY = snake_coords[0].Y;
+
     for(int i = 0; i < mapHeight; i++){
         for(int j = 0; j < mapWidth; j++){
             // first column
-            if (j == 0) { cout << "# "; }
+            if (j == 0) cout << "# ";
 
             // map
-            if (j == x && i == y) { cout << "O "; }
-            else if (j == fruitX && i == fruitY) { cout << "Q "; }
-            else { cout << "  "; }
+            if (j == headX && i == headY) cout << "O ";
+            else if (j == fruit_coords.X && i == fruit_coords.Y) cout << "Q ";
+            else cout << "  ";
 
             //last column
-            if(j == mapWidth - 1) { cout << "# "; } cout << endl;
+            if(j == mapWidth - 1) cout << "# " << endl;
         }
     }
     
@@ -477,8 +458,10 @@ void CLASSIC::initial_draw() {
     cout << endl << endl << "YOUR SCORE : 0";
 }
 //DRAWING THE GAMEPLAY
-void CLASSIC::draw() {
-
+void CLASSIC::draw(redraw const head) {
+    for (pair<COORD, string> element : head) {
+        write(element.first.X * 2 + 2, element.first.Y + 2, element.second);
+    }
 }
 
 //HIGHSCORES

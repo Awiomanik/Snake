@@ -7,8 +7,10 @@
 #include <stdio.h>
 #include <fstream>
 #include <vector>
+#include <utility>
 
 using namespace std;
+using redraw = vector<pair<COORD, string>>;
 
 // DECLARATIONS OF USED FUNCTIONS
 void hideScrollBar();
@@ -71,32 +73,30 @@ public :
 
 class CLASSIC {
 public :
-    //SNAKE ATRIBUTES
-    int tailLen;
-    vector<COORD> snake_coords;
-    bool digesting;
-    enum direction current_direction;
-    enum direction future_direction;
-
     //MAP ATRIBUTES
-    int tempo;
-    int mapWidth;
-    int mapHeight;
+    short tempo;
+    short mapWidth;
+    short mapHeight;
     bool gameOver;
-    int fruitX, fruitY;
-    float score;
+    COORD fruit_coords;
+    int score;
     enum direction {STOP = 0, LEFT, RIGHT, UP, DOWN};
+
+    //SNAKE ATRIBUTES
+    short tailLen;
+    vector<COORD> snake_coords;
+    direction current_direction;
 
     friend class Menu;
     friend class HIGHSCORES;
 
-    CLASSIC(int mapWidth = 10, int mapHeight = 20, int snakeTempo = 40);
+    CLASSIC(short mapWidth = 40, short mapHeight = 20, short snakeTempo = 200);
     ~CLASSIC();
     void gameplay();
     void setup();
-    void logic(bool wheaterMapHasTorusTopology = true);
+    redraw logic(bool wheaterMapHasTorusTopology = true);
     void initial_draw();
-    void draw();
+    void draw(redraw const head);
     void input();
 };
 
