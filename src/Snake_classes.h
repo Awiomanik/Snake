@@ -8,6 +8,7 @@
 #include <fstream>
 #include <vector>
 #include <utility>
+#include <queue>
 
 using namespace std;
 using redraw = vector<pair<COORD, string>>;
@@ -81,6 +82,7 @@ public :
     COORD fruit_coords;
     int score;
     enum direction {STOP = 0, LEFT, RIGHT, UP, DOWN};
+    queue<direction> inputQueue;
 
     //SNAKE ATRIBUTES
     short tailLen;

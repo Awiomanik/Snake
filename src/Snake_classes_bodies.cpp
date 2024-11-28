@@ -13,6 +13,13 @@
 
 using namespace std;
 
+#define KEY_UP 72
+#define KEY_DOWN 80
+#define KEY_LEFT 75
+#define KEY_RIGHT 77
+#define KEY_ENTER 13
+#define KEY_ESC 27
+
 //INTRO
 //INTRO CONSTRUCTOR
 Intro::Intro(COORD bufferSize) : bufferSize(bufferSize) { hanInt = GetStdHandle(STD_OUTPUT_HANDLE);}
@@ -178,21 +185,21 @@ bool Menu::parseInput() {
     switch (key_pressed)
     {
         // Arrow DOWN
-        case 72:
-        previous_option = current_option;
-        current_option = clip(current_option - 1);
-        key_pressed = 0;
-        return true;
-
-        // Arrow UP
-        case 80:
+        case KEY_DOWN:
         previous_option = current_option;
         current_option = clip(current_option + 1);
         key_pressed = 0;
         return true;
 
+        // Arrow UP
+        case KEY_UP:
+        previous_option = current_option;
+        current_option = clip(current_option - 1);
+        key_pressed = 0;
+        return true;
+
         // Enter key
-        case 13 :
+        case KEY_ENTER:
         selection_happened = true;
         return false;
 
@@ -297,8 +304,8 @@ void CLASSIC::gameplay() {
 
     // gameplay loop
     while (!gameOver){
-        draw(logic());
         input();
+        draw(logic());
         Sleep(tempo);
     }
 
@@ -319,6 +326,12 @@ void CLASSIC::setup() {
 }
 //GAME ENGINE
 redraw CLASSIC::logic(bool wheaterMapHasTorusTopology) {
+    // Process the input queue
+    if (!inputQueue.empty()) {
+        current_direction = inputQueue.front();
+        inputQueue.pop();
+    }
+
     // Initialize vector of elements to be redawn
     redraw elements;
 
@@ -378,47 +391,46 @@ redraw CLASSIC::logic(bool wheaterMapHasTorusTopology) {
         elements.push_back({{fruit_coords.X, fruit_coords.Y}, "Q "});
 
         score += 10;
+        elements.push_back({{(short)5, (short)(mapHeight + 2)}, to_string(score)});
         tailLen++;
 
     } else {
         // Do not pop tail end if fruit was eaten
-        elements.push_back({{snake_coords.back().X, snake_coords.back().Y}, "xx"});
+        elements.push_back({{snake_coords.back().X, snake_coords.back().Y}, "  "});
         snake_coords.pop_back();
     }
 
     // Move snake
-    elements.push_back({{snake_coords[0].X, snake_coords[0].Y}, "o "});
+    if (snake_coords.size() > 0) elements.push_back({{snake_coords[0].X, snake_coords[0].Y}, "o "});
     snake_coords.insert(snake_coords.begin(), head);
     elements.push_back({{head.X, head.Y}, "O "});
-
-    //Sleep(1500);
-    //for (auto element : elements){
-    //    cout << endl << endl <<element.first.X << " x " << element.first.Y << ",  " << element.second << endl;}
-    //Sleep(2000);
 
     return elements;
 }
 //GET USER INPUT
 void CLASSIC::input() {
     if (_kbhit()){
+        // Get prevoius direction
+        int last_direction = current_direction;
+        if (!inputQueue.empty()) last_direction = inputQueue.back();
         switch(_getch()){
-            case 'a':
-                if (current_direction != RIGHT) current_direction = LEFT;
+            case KEY_LEFT:
+                if (last_direction != RIGHT) inputQueue.push(LEFT);
                 break;
 
-            case 'd':
-                if (current_direction != LEFT) current_direction = RIGHT;
+            case KEY_RIGHT:
+                if (last_direction != LEFT) inputQueue.push(RIGHT);
                 break;
 
-            case 'w':
-                if (current_direction != DOWN) current_direction = UP;
+            case KEY_UP:
+                if (last_direction != DOWN) inputQueue.push(UP);
                 break;
 
-            case 's':
-                if (current_direction != UP) current_direction = DOWN;
+            case KEY_DOWN:
+                if (last_direction != UP) inputQueue.push(DOWN);
                 break;
 
-            case 'x':
+            case KEY_ESC:
                 gameOver = true;
                 break;
         }
@@ -455,12 +467,17 @@ void CLASSIC::initial_draw() {
     for(int i = 0; i < mapWidth + 2; i++) { cout << "# "; }
     
     // score
-    cout << endl << endl << "YOUR SCORE : 0";
+    cout << endl << endl << "YOUR SCORE: 0";
+
+    // instruction
+    cout << endl << endl << "Controls:" << endl 
+         << " - Use [ARROW KEYS] to control the snake." << endl
+         << " - Press [ESCAPE] to go back to main menu (progress will be lost).";
 }
 //DRAWING THE GAMEPLAY
 void CLASSIC::draw(redraw const head) {
     for (pair<COORD, string> element : head) {
-        write(element.first.X * 2 + 2, element.first.Y + 2, element.second);
+        write(element.first.X * 2 + 3, element.first.Y + 2, element.second);
     }
 }
 
@@ -570,7 +587,16 @@ EXIT::EXIT() {}
 //DESTRUKTOR EXIT
 EXIT::~EXIT() {}
 bool EXIT::Exit() {
-    cout << "Bye bye...";
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 2);
+    system("cls");
+    cout << "Bye bye";
+    for (int i=0; i < 3; i++){
+        Sleep(400);
+        cout << '.';
+    }
+    Sleep(750);
+    system("cls");
+
     return true;
 }
 
