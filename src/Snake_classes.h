@@ -112,6 +112,7 @@ private:
 public:
     HIGHSCORES();
     ~HIGHSCORES();
+    void displayMenu();
     void readScores(const string& mode);
     void displayScores();
     void saveScores(const string&);

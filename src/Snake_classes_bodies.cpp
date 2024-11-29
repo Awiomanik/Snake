@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <fstream>
 #include <vector>
+#include <limits>
 
 #include "Snake_classes.h"
 #include "resource.h"
@@ -260,36 +261,34 @@ bool Menu::executeOption() {
             CLASSIC classic;
             classic.gameplay();
             return false;
-            break;
         }
 
         // HIGH - SCORES
         case 5: {
             HIGHSCORES highscores;
-            highscores.readScores("CLASSIC");
-            highscores.displayScores();
+            highscores.displayMenu();
+            return false;
         }
 
         // EXIT    
         case 8 : { 
             EXIT exit;
             return exit.Exit();
-            break;
+            return true;
         }
 
         // NOT IMPLEMENTED YET
         default :{
             system("cls");
-            cout << "Unfortunately this option is still under development.\n"
-                << "You'll be send back to main menu in a few seconds";
-            Sleep(3000);
-            return NULL;
-            break;
+            cout << endl << "Unfortunately this option is still under development.\n"
+                 << "You'll be send back to main menu in a few seconds";
+            Sleep(2500);
+            return false;
         }
     }
 }
 
-//CLASSIC
+//1. CLASSIC
 //CLASSIC-MODE GAME CONSTRUCTOR
 CLASSIC::CLASSIC(short mapWidth, short mapHeight, short snakeTempo): 
 mapWidth(mapWidth), mapHeight(mapHeight), tempo(snakeTempo), gameOver(false),
@@ -508,11 +507,79 @@ void CLASSIC::draw(redraw const elements) {
     }
 }
 
-//HIGHSCORES
+//5. HIGHSCORES
 //HIGHSCORES CONSTRUCTOR
 HIGHSCORES::HIGHSCORES() {}
 //HIGHSCORES DESTRUCTOR
 HIGHSCORES::~HIGHSCORES() {}
+// MENU OF HIGHSCORES
+void HIGHSCORES::displayMenu() {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    const int CONSOLE_COLOR_CODE = 14; // 103 - silver on gold
+
+    while (true) {
+        SetConsoleTextAttribute(hConsole, CONSOLE_COLOR_CODE);
+        system("cls");
+
+        // Menu display
+        cout << endl 
+             << "*****************************************" << endl
+             << "*    -    H I G H   S C O R E S    -    *" << endl
+             << "*****************************************" << endl << endl
+             << "*---------------------------------------*" << endl
+             << "* Pick a game mode to view high scores: *" << endl
+             << "*---------------------------------------*" << endl
+             << "* [1] - CLASSIC MODE                    *" << endl
+             << "* [2] - ARCADE MODE                     *" << endl
+             << "* [3] - Exit High Scores                *" << endl
+             << "*---------------------------------------*" << endl;
+             
+
+        // Prompt the user for input
+        cout << endl <<">> Enter your choice: ";
+        int choice;
+        cin >> choice;
+
+        // Clear the input buffer
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            SetConsoleTextAttribute(hConsole, CONSOLE_COLOR_CODE - 2);  // Red text for error
+            cout << endl <<"Invalid input! Please enter a valid number (1-3)." << endl;
+            SetConsoleTextAttribute(hConsole, CONSOLE_COLOR_CODE);  // Reset to menu color
+            Sleep(1000);
+            continue;
+        }
+
+        // Process the user's choice
+        string mode;
+        switch (choice) {
+            case 1:
+                mode = "CLASSIC";
+                break;
+
+            case 2:
+                mode = "ARCADE";
+                break;
+
+            case 3:
+                cout << "Exiting high scores menu. Returning to main menu..." << endl;
+                Sleep(1000);
+                return;
+                
+            default:
+                SetConsoleTextAttribute(hConsole, CONSOLE_COLOR_CODE - 2);  // Red text for error
+                cout << endl << "Invalid choice! Please select a valid option (1-3)." << endl;
+                SetConsoleTextAttribute(hConsole, CONSOLE_COLOR_CODE);  // Reset to menu color
+                Sleep(1000);
+                continue;
+        }
+
+        readScores(mode);
+        displayScores();
+    }
+}
 //READ HIGHSCORES FROM FILE
 void HIGHSCORES::readScores(const string& mode) {
     // Build the file path
@@ -522,6 +589,7 @@ void HIGHSCORES::readScores(const string& mode) {
     highScoresFile.open(filePath, std::ios::in);
     if (!highScoresFile.is_open()) {
         cerr << "Error: Unable to open high scores file: " << filePath << "\n";
+        _getch();
         return;
     }
 
@@ -540,6 +608,7 @@ void HIGHSCORES::readScores(const string& mode) {
             } catch (const invalid_argument& e) {
                 cerr << "Error: Invalid score in file at line " << lineNum + 1 << ": " << line << "\n";
                 scores.push_back(0); // Default to 0 if invalid
+                _getch();
             }
         }
         lineNum++;
@@ -551,12 +620,7 @@ void HIGHSCORES::readScores(const string& mode) {
     // Check for missmatch
     if (names.size() != scores.size()) {
         cerr << "Warning: High scores file has mismatched names and scores.\n";
-    }
-
-    // Optional: Display the high scores for debugging
-    cout << "High Scores (" << mode << "):\n";
-    for (size_t i = 0; i < names.size(); ++i) {
-        cout << names[i] << ": " << scores[i] << "\n";
+        _getch();
     }
 }
 //DISPLAY HIGHCORES
@@ -568,10 +632,12 @@ void HIGHSCORES::displayScores() {
     HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
 
     SetConsoleTextAttribute(handle, 15);
+    system("cls");
     cout << "CLASSIC MODE HIGH-SCORES :" << endl << endl;
 
     if (names.empty() || scores.empty()) {
         std::cout << "No high scores available to display.\n";
+        _getch();
         return;
     }
 
@@ -608,7 +674,7 @@ void HIGHSCORES::saveScores(const string& mode) {
     std::cout << "High scores saved successfully to " << filePath << "\n";
 }
 
-//EXIT
+//8. EXIT
 //KONSTRUKTOR EXIT
 EXIT::EXIT() {}
 //DESTRUKTOR EXIT
