@@ -172,3 +172,13 @@ string truncateString(string& input, size_t length) {
     }
     return input;
 }
+// JUSTIFY STRING TO THE RIGHT
+string rightJust(string& input, size_t length) {
+    size_t size = input.size();
+    if (size > length) {
+        return input.substr(0, length - 3) + "...";
+    } else if (size < length){
+        input = string(length - input.size(), ' ') + input;
+    }
+    return input;
+}

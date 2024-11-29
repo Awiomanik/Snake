@@ -24,6 +24,7 @@ COORD prepareConsole();
 void write(int x, int y, const string& message);
 string insertSpaces(const string& input, int number_of_spaces = 1);
 string truncateString(string& input, size_t length);
+string rightJust(string& input, size_t length);
 
 // DECLARATIONS OF CLASSES
 class Intro;
@@ -118,6 +119,7 @@ public:
     void readScores(const string& mode);
     void displayScores(const string& mode);
     void saveScores(const string& mode);
+    int checkScore(const string& mode, int score);
 };
 
 class EXIT{

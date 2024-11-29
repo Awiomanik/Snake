@@ -220,7 +220,7 @@ void Menu::updateMenu(){
     SetConsoleTextAttribute(handle, option_colors[previous_option]);
     for (int x = previous_option_length; x > 0; x--){
         write(x, row, string(1, options[previous_option][x - 1]));
-        if (x % 3 == 0) Sleep(1);
+        if (x % 5 == 0) Sleep(1);
     }
 
     // current position
@@ -231,7 +231,7 @@ void Menu::updateMenu(){
     SetConsoleTextAttribute(handle, option_colors_chosen[current_option]);
     for (int x = 1; x <= current_option_length; x++){
         write(x, row, string(1, options[current_option][x - 1]));
-        if (x % 3 == 0) Sleep(1);
+        if (x % 5 == 0) Sleep(1);
     }
 }
 //MENU MAIN LOOP
@@ -321,11 +321,41 @@ void CLASSIC::gameplay() {
         // Sleep for a short time to prevent high CPU usage
         Sleep(2);
     }
+    Sleep(500);
 
     // final screen
+    fflush(stdin);
     system("cls");
-    cout << "GAME OVER" << endl << endl << "YOUR SCORE : " << score << endl;
+
+    COORD buffer = getMaxBufferSize();
+    int width = buffer.X / 2;
+    int height = buffer.Y / 2;
+    string scoreStr = "YOUR SCORE : " + to_string(score);
+
+    cout << string(height - 12, '\n') << string(width - 13, ' ') << "~   G A M E   O V E R   ~" 
+         << endl << endl <<  endl <<endl << string(width - (scoreStr.size() / 2) - 1, ' ') 
+         << scoreStr << endl;
+
+    HIGHSCORES hs;
+    int place = hs.checkScore("CLASSIC", score);
+    string placeStr;
+    if (place == 1) {
+        placeStr = "Congratulations! You achieved the highest score!";
+    } else if (place == 2) {
+        placeStr = "Great job! You secured the second-highest score!";
+    } else if (place == 3) {
+        placeStr = "Well done! You made it to the podium with the third-highest score!";
+    } else {
+        placeStr = "You achieved the " + to_string(place) + "-th highest score. Keep striving for the top!";
+    }
+
+    cout << endl << endl << endl << string(width - (placeStr.size() / 2), ' ') << placeStr
+         << endl << endl << string(width - 13, ' ') << "Would you like to save it?"
+         << endl << endl << endl << string(width - 13, ' ') << " YES      NO";
+
     _getch();
+
+    hs.displayScores("CLASSIC");
 }
 //GAMEPLAY SETUP
 void CLASSIC::setup() {
@@ -579,8 +609,6 @@ void HIGHSCORES::displayMenu() {
                 break;
 
             case 0:
-                cout << "Exiting high scores menu. Returning to main menu..." << endl;
-                Sleep(1000);
                 return;
                 
             default:
@@ -679,13 +707,13 @@ void HIGHSCORES::displayScores(const string& mode) {
         if (i == 0) SetConsoleTextAttribute(handle, COLOR_TOP_SCORE);
         else if (i >= 3 && (i % 2 == 0)) SetConsoleTextAttribute(handle, COLOR_EVEN_ENTRY);
         else if (i >= 3) SetConsoleTextAttribute(handle, COLOR_ODD_ENTRY);
+        string scoreStr = to_string(scores[i]);
         cout << spaces << ((i < 9) ? " " : "") << i + 1 << "  " 
-             << truncateString(names[i], mid) 
-             << " : " << scores[i] << endl << endl;
+             << truncateString(names[i], mid) << rightJust(scoreStr, mid) << endl << endl;
     }
 
     SetConsoleTextAttribute(handle, COLOR_BLACK_ON_GOLD);
-    cout << endl << endl << endl
+    cout << endl << endl
          << string(middle - 16, ' ')
          << "Press any button to go back...";
     _getch();
@@ -713,7 +741,21 @@ void HIGHSCORES::saveScores(const string& mode) {
     // Debug message
     std::cout << "High scores saved successfully to " << filePath << "\n";
 }
+//CHECK GIVEN SCORE PLACE IN HIGH SCORES (INDEXING FROM 1 !)
+int HIGHSCORES::checkScore(const string& mode, int score) {
+    // Get high scores for a given mode
+    readScores(mode);
 
+    // Find the place in the high scores
+    for (size_t i = 0; i < scores.size(); ++i) {
+        if (scores[i] <= score) {
+            return i + 1;
+        }
+    }
+
+    // Default case
+    return -1;
+}
 
 //8. EXIT
 //KONSTRUKTOR EXIT
