@@ -301,12 +301,21 @@ void CLASSIC::gameplay() {
     // preparation
     setup ();
     initial_draw();
+    DWORD lastUpdate = GetTickCount();
 
     // gameplay loop
     while (!gameOver){
+        // Get input continuously (every 2 ms)
         input();
-        draw(logic());
-        Sleep(tempo);
+
+        // Update game every tempo milisecounds
+        DWORD now = GetTickCount();
+        if (now - lastUpdate >= tempo){
+            draw(logic());
+            lastUpdate = now;
+        }
+        // Sleep for a short time to prevent high CPU usage
+        Sleep(2);
     }
 
     // final screen
@@ -370,7 +379,7 @@ redraw CLASSIC::logic(bool wheaterMapHasTorusTopology) {
 
     } else{
         if (mapWidth < (head.X + 1) || head.X < 0 || 
-            (head.Y + 1) > mapHeight || head.Y < 0)
+           (head.Y + 1) > mapHeight || head.Y < 0)
         gameOver = true;
     }
 
@@ -387,7 +396,25 @@ redraw CLASSIC::logic(bool wheaterMapHasTorusTopology) {
         PlaySound(MAKEINTRESOURCE(IDR_WAVE1), GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
         
         elements.push_back({{fruit_coords.X, fruit_coords.Y}, "  "});
-        fruit_coords = { (short)(rand() % mapWidth), (short)(rand() % mapHeight) };
+
+        // Draw random fruit position and check if it's valid
+        bool isInvalid = true;
+        while (isInvalid) {
+            // Generate random fruit coordinates
+            fruit_coords = { (short)(rand() % mapWidth), (short)(rand() % mapHeight) };
+
+            // Set initial validity
+            isInvalid = false;
+
+            // Check if the coordinates overlap with any part of the snake
+            for (auto segment = snake_coords.begin(); segment != snake_coords.end(); ++segment) {
+                if (segment->X == fruit_coords.X && segment->Y == fruit_coords.Y) {
+                    isInvalid = true;  // Overlap found, mark as invalid
+                    break;
+                }
+            }
+        }
+
         elements.push_back({{fruit_coords.X, fruit_coords.Y}, "Q "});
 
         score += 10;
@@ -409,7 +436,7 @@ redraw CLASSIC::logic(bool wheaterMapHasTorusTopology) {
 }
 //GET USER INPUT
 void CLASSIC::input() {
-    if (_kbhit()){
+    while (_kbhit()){
         // Get prevoius direction
         int last_direction = current_direction;
         if (!inputQueue.empty()) last_direction = inputQueue.back();
@@ -475,8 +502,8 @@ void CLASSIC::initial_draw() {
          << " - Press [ESCAPE] to go back to main menu (progress will be lost).";
 }
 //DRAWING THE GAMEPLAY
-void CLASSIC::draw(redraw const head) {
-    for (pair<COORD, string> element : head) {
+void CLASSIC::draw(redraw const elements) {
+    for (pair<COORD, string> element : elements) {
         write(element.first.X * 2 + 3, element.first.Y + 2, element.second);
     }
 }

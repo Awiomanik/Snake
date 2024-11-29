@@ -92,7 +92,7 @@ public :
     friend class Menu;
     friend class HIGHSCORES;
 
-    CLASSIC(short mapWidth = 40, short mapHeight = 20, short snakeTempo = 200);
+    CLASSIC(short mapWidth = 16, short mapHeight = 16, short snakeTempo = 100);
     ~CLASSIC();
     void gameplay();
     void setup();
