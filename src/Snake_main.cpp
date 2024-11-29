@@ -136,8 +136,8 @@ void setBufferSize(COORD size) {
 }
 // SET ALL THE CONSOLE ATRIBUTES FOR THE PROGRAMM
 COORD prepareConsole() {
-    short fontWidth = 80;
-    short fontHeight = 80;
+    short fontWidth = 20;
+    short fontHeight = 20;
     setFontSize(fontWidth, fontHeight);
     setFullScreen();
     COORD maxSize = getMaxBufferSize(fontWidth, fontHeight);
@@ -150,4 +150,25 @@ COORD prepareConsole() {
 // WRITE TO CONSOLE AT A GIVEN COORDINATES (INDEXING FROM 1 !)
 void write(int x, int y, const string& message) {
     std::cout << "\033[" << y << ";" << x << "H" << message;
+}
+// ELONGATE THE STRING BY INSERTING SPACE
+string insertSpaces(const string& input, int number_of_spaces) {
+    string result;
+    for (size_t i = 0; i < input.size(); ++i) {
+        result += input[i];
+        if (i != input.size() - 1) {
+            result += string(number_of_spaces, ' ');
+        }
+    }
+    return result;
+}
+// STANDARDIZE STRING LENGTH
+string truncateString(string& input, size_t length) {
+    size_t size = input.size();
+    if (size > length) {
+        return input.substr(0, length - 3) + "...";
+    } else if (size < length){
+        input += string(length - input.size(), ' ');
+    }
+    return input;
 }

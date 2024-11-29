@@ -534,7 +534,6 @@ void HIGHSCORES::displayMenu() {
              << "* [2] - ARCADE MODE                     *" << endl
              << "* [3] - Exit High Scores                *" << endl
              << "*---------------------------------------*" << endl;
-             
 
         // Prompt the user for input
         cout << endl <<">> Enter your choice: ";
@@ -577,13 +576,16 @@ void HIGHSCORES::displayMenu() {
         }
 
         readScores(mode);
-        displayScores();
+        displayScores(mode);
     }
 }
 //READ HIGHSCORES FROM FILE
 void HIGHSCORES::readScores(const string& mode) {
+    names.clear();
+    scores.clear();
+
     // Build the file path
-    string filePath = scoresDirectory + "HIGH-SCORES-" + mode + ".dat";
+    string filePath = scoresDirectory + mode + ".dat";
 
     // Open the file
     highScoresFile.open(filePath, std::ios::in);
@@ -624,16 +626,30 @@ void HIGHSCORES::readScores(const string& mode) {
     }
 }
 //DISPLAY HIGHCORES
-void HIGHSCORES::displayScores() {
+void HIGHSCORES::displayScores(const string& mode) {
+    // Constants
+    const int COLOR_TOP_SCORE = 110;
+    const int COLOR_EVEN_ENTRY = 111;
+    const int COLOR_ODD_ENTRY = 103;
+    const int COLOR_BLACK_ON_GOLD = 96;
+    const string TITLE = insertSpaces(" ~ " + mode + " MODE HIGH-SCORES ~ ", 2);
+    const int HALF_TITLE = TITLE.size() / 2 + 1;
 
-    const int COLOR_TOP_SCORE = 14;
-    const int COLOR_EVEN_ENTRY = 8;
-    const int COLOR_ODD_ENTRY = 7;
+    // Get utils
     HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    const int middle = getMaxBufferSize().X / 2;
+    const string spaces = string(middle - HALF_TITLE - 4, ' ');
 
-    SetConsoleTextAttribute(handle, 15);
+    // Title
+    SetConsoleTextAttribute(handle, COLOR_BLACK_ON_GOLD);
     system("cls");
-    cout << "CLASSIC MODE HIGH-SCORES :" << endl << endl;
+
+    cout << endl << endl
+         << spaces << string(TITLE.size() + 4, '*') << endl
+         << spaces << "* " << string(TITLE.size(), ' ') << " *" << endl
+         << spaces << "* " << TITLE << " *" << endl
+         << spaces << "* " << string(TITLE.size(), ' ') << " *" << endl
+         << spaces << string(TITLE.size() + 4, '*') << endl << endl << endl;
 
     if (names.empty() || scores.empty()) {
         std::cout << "No high scores available to display.\n";
@@ -641,14 +657,22 @@ void HIGHSCORES::displayScores() {
         return;
     }
 
-    for (size_t i = 0; i < names.size(); ++i) {
+    int mid = TITLE.size() / 2;
+    for (size_t i = 0; i < names.size() && i < 20; ++i) {
+        // Set color
         if (i == 0) SetConsoleTextAttribute(handle, COLOR_TOP_SCORE);
         else if (i >= 3 && (i % 2 == 0)) SetConsoleTextAttribute(handle, COLOR_EVEN_ENTRY);
         else if (i >= 4) SetConsoleTextAttribute(handle, COLOR_ODD_ENTRY);
-        std::cout << i + 1 << "  " << names[i] << " : " << scores[i] << "\n";
+        cout << spaces << i + 1 << "  " 
+             << truncateString(names[i], (i < 9) ? mid : mid - 1) 
+             << " : " << scores[i] << endl << endl;
     }
 
-    system("pause");
+    SetConsoleTextAttribute(handle, COLOR_BLACK_ON_GOLD);
+    cout << endl << endl << endl
+         << string(middle - 16, ' ')
+         << "Press any button to go back...";
+    _getch();
 }
 //SAVE HIGHSCORES TO A FILE
 void HIGHSCORES::saveScores(const string& mode) {

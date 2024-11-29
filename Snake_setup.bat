@@ -24,13 +24,14 @@ IF ERRORLEVEL 1 (
 )
 
 :: Compile the program
-ECHO Compiling the Snake game...
+ECHO Compiling the game...
 g++ src/*.cpp src/Snake_res.o -o Snake.exe -lwinmm -lgdi32
 IF ERRORLEVEL 1 (
     ECHO Compilation failed. Check your source files for errors.
     PAUSE 
     EXIT /b
 )
+ECHO.
 ECHO Compilation successful!
 ECHO Snake.exe has been created in the current directory.
 ECHO.

@@ -18,10 +18,12 @@ void hideScrollBar();
 void setFullScreen();
 void setCursorSize(short size, bool visible);
 void setFontSize(short width, short height);
-COORD getMaxBufferSize(short fontWidth, short fontHeight);
+COORD getMaxBufferSize(short fontWidth = 20, short fontHeight = 20);
 void setBufferSize(COORD size);
 COORD prepareConsole();
 void write(int x, int y, const string& message);
+string insertSpaces(const string& input, int number_of_spaces = 1);
+string truncateString(string& input, size_t length);
 
 // DECLARATIONS OF CLASSES
 class Intro;
@@ -107,15 +109,15 @@ private:
     ifstream highScoresFile;
     vector<string> names;
     vector<int> scores;
-    const string scoresDirectory = "./HIGH-SCORES/";
+    const string scoresDirectory = "./src/HIGH_SCORES/";
 
 public:
     HIGHSCORES();
     ~HIGHSCORES();
     void displayMenu();
     void readScores(const string& mode);
-    void displayScores();
-    void saveScores(const string&);
+    void displayScores(const string& mode);
+    void saveScores(const string& mode);
 };
 
 class EXIT{
