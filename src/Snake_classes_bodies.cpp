@@ -21,6 +21,7 @@ using namespace std;
 #define KEY_ENTER 13
 #define KEY_ESC 27
 
+
 //INTRO
 //INTRO CONSTRUCTOR
 Intro::Intro(COORD bufferSize) : bufferSize(bufferSize) { hanInt = GetStdHandle(STD_OUTPUT_HANDLE);}
@@ -105,6 +106,7 @@ void Intro::displayTitle() {
     system("cls");
 }
 
+
 //MENU
 //MENU CONSTRUCTOR
 Menu::Menu():
@@ -115,7 +117,7 @@ key_pressed(0), previous_option(-1) {
         "ARCADE (STILL IN DEVELOPMENT)",
         "TWO PLAYERS (COOPERATION) (STILL IN DEVELOPMENT)",
         "TWO PLAYERS (LAST-ONE-STANDING) (STILL IN DEVELOPMENT)",
-        "HIGH-SCORES (STILL IN DEVELOPMENT)",
+        "HIGH-SCORES",
         "CREDITS (STILL IN DEVELOPMENT)",
         "CONTROLS AND INSTRUCTION (STILL IN DEVELOPMENT)",
         "EXIT"
@@ -218,6 +220,7 @@ void Menu::updateMenu(){
     SetConsoleTextAttribute(handle, option_colors[previous_option]);
     for (int x = previous_option_length; x > 0; x--){
         write(x, row, string(1, options[previous_option][x - 1]));
+        if (x % 3 == 0) Sleep(1);
     }
 
     // current position
@@ -228,6 +231,7 @@ void Menu::updateMenu(){
     SetConsoleTextAttribute(handle, option_colors_chosen[current_option]);
     for (int x = 1; x <= current_option_length; x++){
         write(x, row, string(1, options[current_option][x - 1]));
+        if (x % 3 == 0) Sleep(1);
     }
 }
 //MENU MAIN LOOP
@@ -287,6 +291,7 @@ bool Menu::executeOption() {
         }
     }
 }
+
 
 //1. CLASSIC
 //CLASSIC-MODE GAME CONSTRUCTOR
@@ -507,6 +512,7 @@ void CLASSIC::draw(redraw const elements) {
     }
 }
 
+
 //5. HIGHSCORES
 //HIGHSCORES CONSTRUCTOR
 HIGHSCORES::HIGHSCORES() {}
@@ -532,7 +538,9 @@ void HIGHSCORES::displayMenu() {
              << "*---------------------------------------*" << endl
              << "* [1] - CLASSIC MODE                    *" << endl
              << "* [2] - ARCADE MODE                     *" << endl
-             << "* [3] - Exit High Scores                *" << endl
+             << "* [3] - TWO PLAYERS (COOP) MODE         *" << endl
+             << "* [4] - TWO PLAYERS (LOS) MODE          *" << endl
+             << "* [0] - Exit High Scores                *" << endl
              << "*---------------------------------------*" << endl;
 
         // Prompt the user for input
@@ -545,7 +553,7 @@ void HIGHSCORES::displayMenu() {
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
             SetConsoleTextAttribute(hConsole, CONSOLE_COLOR_CODE - 2);  // Red text for error
-            cout << endl <<"Invalid input! Please enter a valid number (1-3)." << endl;
+            cout << endl <<"Invalid input! Please enter a valid number (0-4)." << endl;
             SetConsoleTextAttribute(hConsole, CONSOLE_COLOR_CODE);  // Reset to menu color
             Sleep(1000);
             continue;
@@ -563,13 +571,21 @@ void HIGHSCORES::displayMenu() {
                 break;
 
             case 3:
+                mode = "TWO PLAYERS (COOP)";
+                break;
+
+            case 4:
+                mode = "TWO PLAYERS (LOS)";
+                break;
+
+            case 0:
                 cout << "Exiting high scores menu. Returning to main menu..." << endl;
                 Sleep(1000);
                 return;
                 
             default:
                 SetConsoleTextAttribute(hConsole, CONSOLE_COLOR_CODE - 2);  // Red text for error
-                cout << endl << "Invalid choice! Please select a valid option (1-3)." << endl;
+                cout << endl << "Invalid choice! Please select a valid option (0-4)." << endl;
                 SetConsoleTextAttribute(hConsole, CONSOLE_COLOR_CODE);  // Reset to menu color
                 Sleep(1000);
                 continue;
@@ -697,6 +713,7 @@ void HIGHSCORES::saveScores(const string& mode) {
     // Debug message
     std::cout << "High scores saved successfully to " << filePath << "\n";
 }
+
 
 //8. EXIT
 //KONSTRUKTOR EXIT
