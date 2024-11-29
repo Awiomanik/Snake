@@ -678,9 +678,9 @@ void HIGHSCORES::displayScores(const string& mode) {
         // Set color
         if (i == 0) SetConsoleTextAttribute(handle, COLOR_TOP_SCORE);
         else if (i >= 3 && (i % 2 == 0)) SetConsoleTextAttribute(handle, COLOR_EVEN_ENTRY);
-        else if (i >= 4) SetConsoleTextAttribute(handle, COLOR_ODD_ENTRY);
-        cout << spaces << i + 1 << "  " 
-             << truncateString(names[i], (i < 9) ? mid : mid - 1) 
+        else if (i >= 3) SetConsoleTextAttribute(handle, COLOR_ODD_ENTRY);
+        cout << spaces << ((i < 9) ? " " : "") << i + 1 << "  " 
+             << truncateString(names[i], mid) 
              << " : " << scores[i] << endl << endl;
     }
 
