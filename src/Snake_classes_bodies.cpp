@@ -393,12 +393,38 @@ void CLASSIC::postGameScreen() {
 
     if (checked_yes) {
         string name;
-        cout << "\nInput Your name:";
-        cin >> name;
-        cout << "git.";
-    }
+        cout << endl << endl << string(width - 8, ' ') << "Input Your name:";
 
-    hs.displayScores("CLASSIC");
+        // Loop to get characters until Enter is pressed
+        char symbol;
+        int xPos = width;
+        while (true) {
+            if (_kbhit()) { // Check if a key is pressed
+                symbol = _getch(); // Get the character
+
+                // If Enter (newline character) is detected, break the loop
+                if (symbol == KEY_ENTER) break;
+
+
+                if (symbol == '\b' && !name.empty()) { 
+                    name.pop_back();
+                } else if (symbol >= 32 && symbol <= 126) { // Printable characters
+                    name += symbol;
+                } 
+                    xPos = width - name.size() / 2;
+
+                    COORD position = {(short)(0), (short)32};
+                    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), position);
+                    cout << string(width + name.size() + 1, ' ');
+                    position = {static_cast<SHORT>(xPos), (short)32};
+                    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), position);
+                    cout << name;
+            }
+            Sleep(2);
+        }
+        hs.addScore("CLASSIC", name, score, place - 1);
+        hs.displayScores("CLASSIC");
+    }
 }
 //GAMEPLAY SETUP
 void CLASSIC::setup() {
@@ -764,12 +790,12 @@ void HIGHSCORES::displayScores(const string& mode) {
 //SAVE HIGHSCORES TO A FILE
 void HIGHSCORES::saveScores(const string& mode) {
     // Build the file path using a relative directory
-    std::string filePath = scoresDirectory + "HIGH-SCORES-" + mode + ".dat";
+    string filePath = scoresDirectory + mode + ".dat";
 
     // Open the file in output mode
-    std::ofstream highScoresFile(filePath, std::ios::out);
+    ofstream highScoresFile(filePath, ios::out);
     if (!highScoresFile.is_open()) {
-        std::cerr << "Error: Unable to open high scores file for saving: " << filePath << "\n";
+        cerr << "Error: Unable to open high scores file for saving: " << filePath << "\n";
         return;
     }
 
@@ -780,9 +806,6 @@ void HIGHSCORES::saveScores(const string& mode) {
 
     // Close the file
     highScoresFile.close();
-
-    // Debug message
-    std::cout << "High scores saved successfully to " << filePath << "\n";
 }
 //CHECK GIVEN SCORE PLACE IN HIGH SCORES (INDEXING FROM 1 !)
 int HIGHSCORES::checkScore(const string& mode, int score) {
@@ -791,7 +814,7 @@ int HIGHSCORES::checkScore(const string& mode, int score) {
 
     // Find the place in the high scores
     for (size_t i = 0; i < scores.size(); ++i) {
-        if (scores[i] <= score) {
+        if (scores[i] < score) {
             return i + 1;
         }
     }
@@ -799,6 +822,16 @@ int HIGHSCORES::checkScore(const string& mode, int score) {
     // Default case
     return -1;
 }
+//ADD SCORE
+void HIGHSCORES::addScore(const string& mode, const string name, int score, int place) {
+    readScores(mode);
+
+    names.insert(names.begin() + place, name);
+    scores.insert(scores.begin() + place, score);
+
+    saveScores(mode);
+}
+
 
 //8. EXIT
 //KONSTRUKTOR EXIT

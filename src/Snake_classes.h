@@ -121,6 +121,7 @@ public:
     void displayScores(const string& mode);
     void saveScores(const string& mode);
     int checkScore(const string& mode, int score);
+    void addScore(const string& mode, const string name, int score, int place);
 };
 
 class EXIT{
