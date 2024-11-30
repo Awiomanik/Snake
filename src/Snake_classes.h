@@ -98,6 +98,7 @@ public :
     CLASSIC(short mapWidth = 16, short mapHeight = 16, short snakeTempo = 100);
     ~CLASSIC();
     void gameplay();
+    void postGameScreen();
     void setup();
     redraw logic(bool wheaterMapHasTorusTopology = true);
     void initial_draw();

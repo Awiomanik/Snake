@@ -321,12 +321,17 @@ void CLASSIC::gameplay() {
         // Sleep for a short time to prevent high CPU usage
         Sleep(2);
     }
-    Sleep(500);
+    Sleep(700);
 
+    postGameScreen();
+}
+// DISPLAY POST GAME SCREEN WITH SCORE
+void CLASSIC::postGameScreen() {
     // final screen
     fflush(stdin);
     system("cls");
 
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     COORD buffer = getMaxBufferSize();
     int width = buffer.X / 2;
     int height = buffer.Y / 2;
@@ -351,9 +356,47 @@ void CLASSIC::gameplay() {
 
     cout << endl << endl << endl << string(width - (placeStr.size() / 2), ' ') << placeStr
          << endl << endl << string(width - 13, ' ') << "Would you like to save it?"
-         << endl << endl << endl << string(width - 13, ' ') << " YES      NO";
+         << endl << endl << endl << string(width - 7, ' ');
+    
+    const int CHECKED_COLOR = 240;
+    const int UNCHECKED_COLOR = 7;
+    bool checked_yes = true;
+    int key_pressed = -1;
 
-    _getch();
+    SetConsoleTextAttribute(hConsole, (checked_yes ? CHECKED_COLOR : UNCHECKED_COLOR));
+    cout << " YES ";       
+    SetConsoleTextAttribute(hConsole, UNCHECKED_COLOR);
+    cout << string(5, ' ');
+    SetConsoleTextAttribute(hConsole, (checked_yes ? UNCHECKED_COLOR : CHECKED_COLOR));
+    cout <<  " NO ";
+
+    while(true){
+        if (_kbhit()) {
+            key_pressed = _getch();
+        
+            if (key_pressed == KEY_LEFT) { checked_yes = true;
+            } else if (key_pressed == KEY_RIGHT) { checked_yes = false;
+            } else if (key_pressed == KEY_ENTER) break;
+
+            cout << string(14, '\b');
+            SetConsoleTextAttribute(hConsole, (checked_yes ? CHECKED_COLOR : UNCHECKED_COLOR));
+            cout << " YES ";       
+            SetConsoleTextAttribute(hConsole, UNCHECKED_COLOR);
+            cout << string(5, ' ');
+            SetConsoleTextAttribute(hConsole, (checked_yes ? UNCHECKED_COLOR : CHECKED_COLOR));
+            cout <<  " NO ";
+        }
+
+        Sleep(5);
+    }
+    SetConsoleTextAttribute(hConsole, UNCHECKED_COLOR);
+
+    if (checked_yes) {
+        string name;
+        cout << "\nInput Your name:";
+        cin >> name;
+        cout << "git.";
+    }
 
     hs.displayScores("CLASSIC");
 }
