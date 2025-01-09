@@ -103,7 +103,38 @@ public :
     redraw logic(bool wheaterMapHasTorusTopology = true);
     void initial_draw();
     void draw(redraw const head);
-    void input();
+    bool input();
+};
+
+class CLASSIC_MULTI_COOP {
+public :
+    //MAP ATRIBUTES
+    short tempo;
+    short mapWidth;
+    short mapHeight;
+    bool gameOver;
+    COORD fruit_coords;
+    int score;
+    enum direction {STOP = 0, LEFT, RIGHT, UP, DOWN};
+    queue<direction> inputQueue;
+
+    //SNAKE ATRIBUTES
+    vector<short> tailLens;
+    vector<vector<COORD>> snakes_coords;
+    vector<direction> current_directions;
+
+    friend class Menu;
+    friend class HIGHSCORES;
+
+    CLASSIC_MULTI_COOP(short mapWidth = 32, short mapHeight = 32, short snakeTempo = 100, short numOfPlayers = 2);
+    ~CLASSIC_MULTI_COOP();
+    void gameplay();
+    void postGameScreen();
+    void setup();
+    redraw logic(bool wheaterMapHasTorusTopology = true);
+    void initial_draw();
+    void draw(redraw const head);
+    bool input();
 };
 
 class HIGHSCORES{

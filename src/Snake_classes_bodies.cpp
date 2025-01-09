@@ -306,11 +306,12 @@ void CLASSIC::gameplay() {
     setup ();
     initial_draw();
     DWORD lastUpdate = GetTickCount();
+    bool escaped;
 
     // gameplay loop
     while (!gameOver){
         // Get input continuously (every 2 ms)
-        input();
+        escaped = input();
 
         // Update game every tempo milisecounds
         DWORD now = GetTickCount();
@@ -323,7 +324,7 @@ void CLASSIC::gameplay() {
     }
     Sleep(700);
 
-    postGameScreen();
+    if (escaped) postGameScreen();
 }
 // DISPLAY POST GAME SCREEN WITH SCORE
 void CLASSIC::postGameScreen() {
@@ -538,7 +539,7 @@ redraw CLASSIC::logic(bool wheaterMapHasTorusTopology) {
     return elements;
 }
 //GET USER INPUT
-void CLASSIC::input() {
+bool CLASSIC::input() {
     while (_kbhit()){
         // Get prevoius direction
         int last_direction = current_direction;
@@ -562,9 +563,397 @@ void CLASSIC::input() {
 
             case KEY_ESC:
                 gameOver = true;
-                break;
+                return false;
         }
     }
+    return true;
+}
+//DRAWING INITIAL FRAME
+void CLASSIC::initial_draw() {
+    system("cls");
+
+    // First row
+    for(int i = 0; i < mapWidth + 2; i++) { cout << "# "; }
+    cout << endl;
+
+    // map and columns
+    short headX = snake_coords[0].X;
+    short headY = snake_coords[0].Y;
+
+    for(int i = 0; i < mapHeight; i++){
+        for(int j = 0; j < mapWidth; j++){
+            // first column
+            if (j == 0) cout << "# ";
+
+            // map
+            if (j == headX && i == headY) cout << "O ";
+            else if (j == fruit_coords.X && i == fruit_coords.Y) cout << "Q ";
+            else cout << "  ";
+
+            //last column
+            if(j == mapWidth - 1) cout << "# " << endl;
+        }
+    }
+    
+    // last row
+    for(int i = 0; i < mapWidth + 2; i++) { cout << "# "; }
+    
+    // score
+    cout << endl << endl << "YOUR SCORE: 0";
+
+    // instruction
+    cout << endl << endl << "Controls:" << endl 
+         << " - Use [ARROW KEYS] to control the snake." << endl
+         << " - Press [ESCAPE] to go back to main menu (progress will be lost).";
+}
+//DRAWING THE GAMEPLAY
+void CLASSIC::draw(redraw const elements) {
+    for (pair<COORD, string> element : elements) {
+        write(element.first.X * 2 + 3, element.first.Y + 2, element.second);
+    }
+}
+
+
+//2. CLASSIC_MULTI_COOP
+//MULTIPLAYER-COOPERATION CLASSIC-MODE GAME CONSTRUCTOR
+/**
+ * @brief Constructs a multiplayer cooperation classic-mode snake game.
+ * 
+ * Initializes the game map and player-controlled snake positions based on the number of players.
+ * Ensures a valid number of players (between 2 and 10) and assigns initial snake positions
+ * according to predefined fractional coordinates for fair distribution on the map.
+ * 
+ * @param mapWidth The width of the game map.
+ * @param mapHeight The height of the game map.
+ * @param snakeTempo The speed of the snake movement (lower value means faster tempo).
+ * @param numOfPlayers The number of players (must be between 2 and 10).
+ */
+CLASSIC_MULTI_COOP::CLASSIC_MULTI_COOP(short mapWidth, short mapHeight, short snakeTempo, short numOfPlayers): 
+mapWidth(mapWidth), mapHeight(mapHeight), tempo(snakeTempo), gameOver(false) {
+    // Ensure numOfPlayers is within valid range
+    numOfPlayers = std::max((short)2, std::min(numOfPlayers, (short)10));
+
+    // Set initial positions
+    std::vector<std::pair<float, float>> positions;
+    switch (numOfPlayers) {
+        case 2:
+            positions = {{0.33f, 0.5f}, {0.67f, 0.5f}};
+            break;
+        case 3:
+            positions = {{0.25f, 0.5f}, {0.5f, 0.5f}, {0.75f, 0.5f}};
+            break;
+        case 4:
+            positions = {{0.25f, 0.25f}, {0.75f, 0.25f}, 
+                         {0.25f, 0.75f}, {0.75f, 0.75f}};
+            break;
+        case 5:
+            positions = {{0.25f, 0.25f}, {0.75f, 0.25f}, 
+                                {0.5f, 0.5f}, 
+                         {0.75f, 0.75f}, {0.25f, 0.75f}};
+            break;
+        case 6:
+            positions = {{0.25f, 0.25f}, {0.5f, 0.25f}, {0.75f, 0.25f},
+                         {0.75f, 0.75f}, {0.5f, 0.75f}, {0.25f, 0.75f}};
+            break;
+        case 7:
+            positions = {{0.25f, 0.25f}, {0.5f, 0.25f}, {0.75f, 0.25f}, 
+                                         {0.5f, 0.5f},
+                         {0.25f, 0.75f}, {0.5f, 0.75f}, {0.75f, 0.75f}};
+            break;
+        case 8:
+            positions = {{0.25f, 0.25f}, {0.5f, 0.25f}, {0.75f, 0.25f}, 
+                                {0.25f, 0.5f}, {0.75f, 0.5f}
+                         {0.25f, 0.75f}, {0.5f, 0.75f}, {0.75f, 0.75f}};
+            break;
+        case 9:
+            positions = {{0.25f, 0.25f}, {0.5f, 0.25f}, {0.75f, 0.25f}, 
+                         {0.25f, 0.5f}, {0.5f, 0.5f}, {0.75f, 0.5f}
+                         {0.25f, 0.75f}, {0.5f, 0.75f}, {0.75f, 0.75f}};
+            break;
+        case 10:
+            positions = {{0.25f, 0.25f}, {0.5f, 0.25f}, {0.75f, 0.25f}, 
+                         {0.2f, 0.5f}, {0.4f, 0.5f}, {0.6f, 0.5f}, {0.8f, 0.5f}, 
+                         {0.25f, 0.75f}, {0.5f, 0.75f}, {0.75f, 0.75f}};
+            break;
+    }
+
+    // Convert fractional positions to integer coordinates
+    for (const auto& pos : positions) {
+        snake_coords.push_back(COORD{
+            (short)(mapWidth * pos.first), 
+            (short)(mapHeight * pos.second)
+        });
+    }
+}
+//CLASSIC-MODE GAME DESTRUCTOR
+CLASSIC_MULTI_COOP::~CLASSIC_MULTI_COOP() {}
+// GAMEPLAY
+void CLASSIC_MULTI_COO::gameplay() {
+    // preparation
+    setup ();
+    initial_draw();
+    DWORD lastUpdate = GetTickCount();
+    bool escaped;
+
+    // gameplay loop
+    while (!gameOver){
+        // Get input continuously (every 2 ms)
+        escaped = input();
+
+        // Update game every tempo milisecounds
+        DWORD now = GetTickCount();
+        if (now - lastUpdate >= tempo){
+            draw(logic());
+            lastUpdate = now;
+        }
+        // Sleep for a short time to prevent high CPU usage
+        Sleep(2);
+    }
+    Sleep(700);
+
+    if (escaped) postGameScreen();
+}
+// DISPLAY POST GAME SCREEN WITH SCORE
+void CLASSIC::postGameScreen() {
+    // final screen
+    fflush(stdin);
+    system("cls");
+
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    COORD buffer = getMaxBufferSize();
+    int width = buffer.X / 2;
+    int height = buffer.Y / 2;
+    string scoreStr = "YOUR SCORE : " + to_string(score);
+
+    cout << string(height - 12, '\n') << string(width - 13, ' ') << "~   G A M E   O V E R   ~" 
+         << endl << endl <<  endl <<endl << string(width - (scoreStr.size() / 2) - 1, ' ') 
+         << scoreStr << endl;
+
+    HIGHSCORES hs;
+    int place = hs.checkScore("CLASSIC", score);
+    string placeStr;
+    if (place == 1) {
+        placeStr = "Congratulations! You achieved the highest score!";
+    } else if (place == 2) {
+        placeStr = "Great job! You secured the second-highest score!";
+    } else if (place == 3) {
+        placeStr = "Well done! You made it to the podium with the third-highest score!";
+    } else {
+        placeStr = "You achieved the " + to_string(place) + "-th highest score. Keep striving for the top!";
+    }
+
+    cout << endl << endl << endl << string(width - (placeStr.size() / 2), ' ') << placeStr
+         << endl << endl << string(width - 13, ' ') << "Would you like to save it?"
+         << endl << endl << endl << string(width - 7, ' ');
+    
+    const int CHECKED_COLOR = 240;
+    const int UNCHECKED_COLOR = 7;
+    bool checked_yes = true;
+    int key_pressed = -1;
+
+    SetConsoleTextAttribute(hConsole, (checked_yes ? CHECKED_COLOR : UNCHECKED_COLOR));
+    cout << " YES ";       
+    SetConsoleTextAttribute(hConsole, UNCHECKED_COLOR);
+    cout << string(5, ' ');
+    SetConsoleTextAttribute(hConsole, (checked_yes ? UNCHECKED_COLOR : CHECKED_COLOR));
+    cout <<  " NO ";
+
+    while(true){
+        if (_kbhit()) {
+            key_pressed = _getch();
+        
+            if (key_pressed == KEY_LEFT) { checked_yes = true;
+            } else if (key_pressed == KEY_RIGHT) { checked_yes = false;
+            } else if (key_pressed == KEY_ENTER) break;
+
+            cout << string(14, '\b');
+            SetConsoleTextAttribute(hConsole, (checked_yes ? CHECKED_COLOR : UNCHECKED_COLOR));
+            cout << " YES ";       
+            SetConsoleTextAttribute(hConsole, UNCHECKED_COLOR);
+            cout << string(5, ' ');
+            SetConsoleTextAttribute(hConsole, (checked_yes ? UNCHECKED_COLOR : CHECKED_COLOR));
+            cout <<  " NO ";
+        }
+
+        Sleep(5);
+    }
+    SetConsoleTextAttribute(hConsole, UNCHECKED_COLOR);
+
+    if (checked_yes) {
+        string name;
+        cout << endl << endl << string(width - 8, ' ') << "Input Your name:";
+
+        // Loop to get characters until Enter is pressed
+        char symbol;
+        int xPos = width;
+        while (true) {
+            if (_kbhit()) { // Check if a key is pressed
+                symbol = _getch(); // Get the character
+
+                // If Enter (newline character) is detected, break the loop
+                if (symbol == KEY_ENTER) break;
+
+
+                if (symbol == '\b' && !name.empty()) { 
+                    name.pop_back();
+                } else if (symbol >= 32 && symbol <= 126) { // Printable characters
+                    name += symbol;
+                } 
+                    xPos = width - name.size() / 2;
+
+                    COORD position = {(short)(0), (short)32};
+                    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), position);
+                    cout << string(width + name.size() + 1, ' ');
+                    position = {static_cast<SHORT>(xPos), (short)32};
+                    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), position);
+                    cout << name;
+            }
+            Sleep(2);
+        }
+        hs.addScore("CLASSIC", name, score, place - 1);
+        hs.displayScores("CLASSIC");
+    }
+}
+//GAMEPLAY SETUP
+void CLASSIC::setup() {
+    current_direction = STOP;
+
+    fruit_coords = { (short)(rand() % mapWidth), (short)(rand() % mapHeight) };
+
+    score = 0;
+
+    system("color 07");
+}
+//GAME ENGINE
+redraw CLASSIC::logic(bool wheaterMapHasTorusTopology) {
+    // Process the input queue
+    if (!inputQueue.empty()) {
+        current_direction = inputQueue.front();
+        inputQueue.pop();
+    }
+
+    // Initialize vector of elements to be redawn
+    redraw elements;
+
+    // Get head
+    COORD head = snake_coords[0];
+
+    // Check directions
+    switch (current_direction){
+        case LEFT:
+            head.X--;
+            break;
+
+        case RIGHT:
+            head.X++;
+            break;
+
+        case DOWN:
+            head.Y++;
+            break;
+
+        case UP:
+            head.Y--;
+            break;
+
+        default:
+            break;
+    }
+
+    // Borders
+    if (wheaterMapHasTorusTopology){
+        if (head.X >= mapWidth) head.X = 0; 
+        else if (head.X < 0) head.X = mapWidth - 1;
+
+        if (head.Y >= mapHeight) head.Y = 0; 
+        else if (head.Y < 0) head.Y = mapHeight - 1;
+
+    } else{
+        if (mapWidth < (head.X + 1) || head.X < 0 || 
+           (head.Y + 1) > mapHeight || head.Y < 0)
+        gameOver = true;
+    }
+
+    // Whether snake bit himself
+    for (auto segment = snake_coords.begin() + 1; segment != snake_coords.end(); segment++) {
+        if (segment->X == head.X && segment->Y == head.Y) {
+            gameOver = true;
+            break;
+        }
+    }
+
+    // Fruit eaten
+    if (head.X == fruit_coords.X && head.Y == fruit_coords.Y) {
+        PlaySound(MAKEINTRESOURCE(IDR_WAVE1), GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
+        
+        elements.push_back({{fruit_coords.X, fruit_coords.Y}, "  "});
+
+        // Draw random fruit position and check if it's valid
+        bool isInvalid = true;
+        while (isInvalid) {
+            // Generate random fruit coordinates
+            fruit_coords = { (short)(rand() % mapWidth), (short)(rand() % mapHeight) };
+
+            // Set initial validity
+            isInvalid = false;
+
+            // Check if the coordinates overlap with any part of the snake
+            for (auto segment = snake_coords.begin(); segment != snake_coords.end(); ++segment) {
+                if (segment->X == fruit_coords.X && segment->Y == fruit_coords.Y) {
+                    isInvalid = true;  // Overlap found, mark as invalid
+                    break;
+                }
+            }
+        }
+
+        elements.push_back({{fruit_coords.X, fruit_coords.Y}, "Q "});
+
+        score += 10;
+        elements.push_back({{(short)5, (short)(mapHeight + 2)}, to_string(score)});
+        tailLen++;
+
+    } else {
+        // Do not pop tail end if fruit was eaten
+        elements.push_back({{snake_coords.back().X, snake_coords.back().Y}, "  "});
+        snake_coords.pop_back();
+    }
+
+    // Move snake
+    if (snake_coords.size() > 0) elements.push_back({{snake_coords[0].X, snake_coords[0].Y}, "o "});
+    snake_coords.insert(snake_coords.begin(), head);
+    elements.push_back({{head.X, head.Y}, "O "});
+
+    return elements;
+}
+//GET USER INPUT
+bool CLASSIC::input() {
+    while (_kbhit()){
+        // Get prevoius direction
+        int last_direction = current_direction;
+        if (!inputQueue.empty()) last_direction = inputQueue.back();
+        switch(_getch()){
+            case KEY_LEFT:
+                if (last_direction != RIGHT) inputQueue.push(LEFT);
+                break;
+
+            case KEY_RIGHT:
+                if (last_direction != LEFT) inputQueue.push(RIGHT);
+                break;
+
+            case KEY_UP:
+                if (last_direction != DOWN) inputQueue.push(UP);
+                break;
+
+            case KEY_DOWN:
+                if (last_direction != UP) inputQueue.push(DOWN);
+                break;
+
+            case KEY_ESC:
+                gameOver = true;
+                return false;
+        }
+    }
+    return true;
 }
 //DRAWING INITIAL FRAME
 void CLASSIC::initial_draw() {
