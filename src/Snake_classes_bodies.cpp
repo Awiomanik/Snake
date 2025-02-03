@@ -8,6 +8,7 @@
 #include <fstream>
 #include <vector>
 #include <limits>
+#include<algorithm>
 
 #include "Snake_classes.h"
 #include "resource.h"
@@ -32,7 +33,7 @@ void Intro::displayTHX() {
         system("cls");
         system("color 8f");
 
-        int x = bufferSize.X / 2 - 3;
+        int x = bufferSize.X / 2 + 30;
         int y = bufferSize.Y / 2 - 3;
 
         write(x, y, "T H X");
@@ -257,13 +258,20 @@ void Menu::runMenu() {
     }
 }
 //EXECUTE CHOOSEN OPTION
-bool Menu::executeOption() {
+bool Menu::executeOption() { // TO DO: ESC key freezes the screen
     switch (current_option + 1){
         
         // CLASSIC - MODE
         case 1 : {
             CLASSIC classic;
             classic.gameplay();
+            return false;
+        }
+
+        // COOPERATION CLASSIC - MODE
+        case 3 : {
+            CLASSIC_MULTI_COOP coop;
+            coop.gameplay();
             return false;
         }
 
@@ -523,7 +531,6 @@ redraw CLASSIC::logic(bool wheaterMapHasTorusTopology) {
 
         score += 10;
         elements.push_back({{(short)5, (short)(mapHeight + 2)}, to_string(score)});
-        tailLen++;
 
     } else {
         // Do not pop tail end if fruit was eaten
@@ -629,68 +636,14 @@ void CLASSIC::draw(redraw const elements) {
  * @param numOfPlayers The number of players (must be between 2 and 10).
  */
 CLASSIC_MULTI_COOP::CLASSIC_MULTI_COOP(short mapWidth, short mapHeight, short snakeTempo, short numOfPlayers): 
-mapWidth(mapWidth), mapHeight(mapHeight), tempo(snakeTempo), gameOver(false) {
-    // Ensure numOfPlayers is within valid range
-    numOfPlayers = std::max((short)2, std::min(numOfPlayers, (short)10));
-
-    // Set initial positions
-    std::vector<std::pair<float, float>> positions;
-    switch (numOfPlayers) {
-        case 2:
-            positions = {{0.33f, 0.5f}, {0.67f, 0.5f}};
-            break;
-        case 3:
-            positions = {{0.25f, 0.5f}, {0.5f, 0.5f}, {0.75f, 0.5f}};
-            break;
-        case 4:
-            positions = {{0.25f, 0.25f}, {0.75f, 0.25f}, 
-                         {0.25f, 0.75f}, {0.75f, 0.75f}};
-            break;
-        case 5:
-            positions = {{0.25f, 0.25f}, {0.75f, 0.25f}, 
-                                {0.5f, 0.5f}, 
-                         {0.75f, 0.75f}, {0.25f, 0.75f}};
-            break;
-        case 6:
-            positions = {{0.25f, 0.25f}, {0.5f, 0.25f}, {0.75f, 0.25f},
-                         {0.75f, 0.75f}, {0.5f, 0.75f}, {0.25f, 0.75f}};
-            break;
-        case 7:
-            positions = {{0.25f, 0.25f}, {0.5f, 0.25f}, {0.75f, 0.25f}, 
-                                         {0.5f, 0.5f},
-                         {0.25f, 0.75f}, {0.5f, 0.75f}, {0.75f, 0.75f}};
-            break;
-        case 8:
-            positions = {{0.25f, 0.25f}, {0.5f, 0.25f}, {0.75f, 0.25f}, 
-                                {0.25f, 0.5f}, {0.75f, 0.5f}
-                         {0.25f, 0.75f}, {0.5f, 0.75f}, {0.75f, 0.75f}};
-            break;
-        case 9:
-            positions = {{0.25f, 0.25f}, {0.5f, 0.25f}, {0.75f, 0.25f}, 
-                         {0.25f, 0.5f}, {0.5f, 0.5f}, {0.75f, 0.5f}
-                         {0.25f, 0.75f}, {0.5f, 0.75f}, {0.75f, 0.75f}};
-            break;
-        case 10:
-            positions = {{0.25f, 0.25f}, {0.5f, 0.25f}, {0.75f, 0.25f}, 
-                         {0.2f, 0.5f}, {0.4f, 0.5f}, {0.6f, 0.5f}, {0.8f, 0.5f}, 
-                         {0.25f, 0.75f}, {0.5f, 0.75f}, {0.75f, 0.75f}};
-            break;
-    }
-
-    // Convert fractional positions to integer coordinates
-    for (const auto& pos : positions) {
-        snake_coords.push_back(COORD{
-            (short)(mapWidth * pos.first), 
-            (short)(mapHeight * pos.second)
-        });
-    }
-}
+mapWidth(mapWidth), mapHeight(mapHeight), tempo(snakeTempo), gameOver(false), 
+numOfPlayers(std::max((short)2, std::min(numOfPlayers, (short)10))) {}
 //CLASSIC-MODE GAME DESTRUCTOR
 CLASSIC_MULTI_COOP::~CLASSIC_MULTI_COOP() {}
 // GAMEPLAY
-void CLASSIC_MULTI_COO::gameplay() {
+void CLASSIC_MULTI_COOP::gameplay() {
     // preparation
-    setup ();
+    setup (); // TO DO: make an starting screen to choose num of players and stearing
     initial_draw();
     DWORD lastUpdate = GetTickCount();
     bool escaped;
@@ -711,10 +664,10 @@ void CLASSIC_MULTI_COO::gameplay() {
     }
     Sleep(700);
 
-    if (escaped) postGameScreen();
+    //if (escaped) postGameScreen(); // TO DO: Create post game screen based on singleplayer
 }
 // DISPLAY POST GAME SCREEN WITH SCORE
-void CLASSIC::postGameScreen() {
+void CLASSIC_MULTI_COOP::postGameScreen() {
     // final screen
     fflush(stdin);
     system("cls");
@@ -815,8 +768,62 @@ void CLASSIC::postGameScreen() {
     }
 }
 //GAMEPLAY SETUP
-void CLASSIC::setup() {
-    current_direction = STOP;
+void CLASSIC_MULTI_COOP::setup() {
+
+    // Set initial positions
+    std::vector<std::pair<float, float>> positions;
+    switch (numOfPlayers) {
+        case 2:
+            positions = {{0.33f, 0.5f}, {0.67f, 0.5f}};
+            break;
+        case 3:
+            positions = {{0.25f, 0.5f}, {0.5f, 0.5f}, {0.75f, 0.5f}};
+            break;
+        case 4:
+            positions = {{0.25f, 0.25f}, {0.75f, 0.25f}, 
+                         {0.25f, 0.75f}, {0.75f, 0.75f}};
+            break;
+        case 5:
+            positions = {{0.25f, 0.25f}, {0.75f, 0.25f}, 
+                                {0.5f, 0.5f}, 
+                         {0.75f, 0.75f}, {0.25f, 0.75f}};
+            break;
+        case 6:
+            positions = {{0.25f, 0.25f}, {0.5f, 0.25f}, {0.75f, 0.25f},
+                         {0.75f, 0.75f}, {0.5f, 0.75f}, {0.25f, 0.75f}};
+            break;
+        case 7:
+            positions = {{0.25f, 0.25f}, {0.5f, 0.25f}, {0.75f, 0.25f}, 
+                                         {0.5f, 0.5f},
+                         {0.25f, 0.75f}, {0.5f, 0.75f}, {0.75f, 0.75f}};
+            break;
+        case 8:
+            positions = {{0.25f, 0.25f}, {0.5f, 0.25f}, {0.75f, 0.25f}, 
+                                {0.25f, 0.5f}, {0.75f, 0.5f},
+                         {0.25f, 0.75f}, {0.5f, 0.75f}, {0.75f, 0.75f}};
+            break;
+        case 9:
+            positions = {{0.25f, 0.25f}, {0.5f, 0.25f}, {0.75f, 0.25f}, 
+                         {0.25f, 0.5f}, {0.5f, 0.5f}, {0.75f, 0.5f},
+                         {0.25f, 0.75f}, {0.5f, 0.75f}, {0.75f, 0.75f}};
+            break;
+        case 10:
+            positions = {{0.25f, 0.25f}, {0.5f, 0.25f}, {0.75f, 0.25f}, 
+                         {0.2f, 0.5f}, {0.4f, 0.5f}, {0.6f, 0.5f}, {0.8f, 0.5f}, 
+                         {0.25f, 0.75f}, {0.5f, 0.75f}, {0.75f, 0.75f}};
+            break;
+    }
+
+    // Convert fractional positions to integer coordinates
+    for (const auto& pos : positions) {
+        Snake snk;
+        snk.current_direction = UP;
+        snk.snake_coords.push_back(COORD{
+            (short)(mapWidth * pos.first), 
+            (short)(mapHeight * pos.second)
+        });
+        snakes.push_back(snk);
+    }
 
     fruit_coords = { (short)(rand() % mapWidth), (short)(rand() % mapHeight) };
 
@@ -825,111 +832,121 @@ void CLASSIC::setup() {
     system("color 07");
 }
 //GAME ENGINE
-redraw CLASSIC::logic(bool wheaterMapHasTorusTopology) {
-    // Process the input queue
+redraw CLASSIC_MULTI_COOP::logic(bool wheaterMapHasTorusTopology) {
+    // Process the input queue // TO DO: process input properely 
     if (!inputQueue.empty()) {
-        current_direction = inputQueue.front();
+        direction newDirection = inputQueue.front();
         inputQueue.pop();
+        for (auto& snk : snakes) {
+            snk.current_direction = newDirection;
+        }
     }
 
     // Initialize vector of elements to be redawn
     redraw elements;
 
-    // Get head
-    COORD head = snake_coords[0];
+    // Get heads
+    for (auto snake : snakes) {
+        COORD head = snake.snake_coords[0];
 
-    // Check directions
-    switch (current_direction){
-        case LEFT:
-            head.X--;
-            break;
+        // Check directions
+        switch (snake.current_direction){
+            case LEFT:
+                head.X--;
+                break;
 
-        case RIGHT:
-            head.X++;
-            break;
+            case RIGHT:
+                head.X++;
+                break;
 
-        case DOWN:
-            head.Y++;
-            break;
+            case DOWN:
+                head.Y++;
+                break;
 
-        case UP:
-            head.Y--;
-            break;
+            case UP:
+                head.Y--;
+                break;
 
-        default:
-            break;
-    }
-
-    // Borders
-    if (wheaterMapHasTorusTopology){
-        if (head.X >= mapWidth) head.X = 0; 
-        else if (head.X < 0) head.X = mapWidth - 1;
-
-        if (head.Y >= mapHeight) head.Y = 0; 
-        else if (head.Y < 0) head.Y = mapHeight - 1;
-
-    } else{
-        if (mapWidth < (head.X + 1) || head.X < 0 || 
-           (head.Y + 1) > mapHeight || head.Y < 0)
-        gameOver = true;
-    }
-
-    // Whether snake bit himself
-    for (auto segment = snake_coords.begin() + 1; segment != snake_coords.end(); segment++) {
-        if (segment->X == head.X && segment->Y == head.Y) {
-            gameOver = true;
-            break;
+            default:
+                break;
         }
-    }
 
-    // Fruit eaten
-    if (head.X == fruit_coords.X && head.Y == fruit_coords.Y) {
-        PlaySound(MAKEINTRESOURCE(IDR_WAVE1), GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
-        
-        elements.push_back({{fruit_coords.X, fruit_coords.Y}, "  "});
+        // Borders
+        if (wheaterMapHasTorusTopology){
+            if (head.X >= mapWidth) head.X = 0; 
+            else if (head.X < 0) head.X = mapWidth - 1;
 
-        // Draw random fruit position and check if it's valid
-        bool isInvalid = true;
-        while (isInvalid) {
-            // Generate random fruit coordinates
-            fruit_coords = { (short)(rand() % mapWidth), (short)(rand() % mapHeight) };
+            if (head.Y >= mapHeight) head.Y = 0; 
+            else if (head.Y < 0) head.Y = mapHeight - 1;
 
-            // Set initial validity
-            isInvalid = false;
+        } else{
+            if (mapWidth < (head.X + 1) || head.X < 0 || 
+            (head.Y + 1) > mapHeight || head.Y < 0)
+            gameOver = true;
+        }
 
-            // Check if the coordinates overlap with any part of the snake
-            for (auto segment = snake_coords.begin(); segment != snake_coords.end(); ++segment) {
-                if (segment->X == fruit_coords.X && segment->Y == fruit_coords.Y) {
-                    isInvalid = true;  // Overlap found, mark as invalid
-                    break;
+        // Whether snake bit himself or other players
+        bool collisionDetected = false;
+        for (const auto& snake2 : snakes) {
+            for (auto segment = snake2.snake_coords.begin() + 1; segment != snake2.snake_coords.end(); ++segment) {
+                if (segment->X == head.X && segment->Y == head.Y) {
+                    gameOver = true;
+                    collisionDetected = true;
+                    break; // Break from inner loop
                 }
             }
+            if (collisionDetected) break; // Break from outer loop
         }
+
+        // Fruit eaten
+        if (head.X == fruit_coords.X && head.Y == fruit_coords.Y) {
+            PlaySound(MAKEINTRESOURCE(IDR_WAVE1), GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
+            
+            elements.push_back({{fruit_coords.X, fruit_coords.Y}, "  "});
+
+            // Draw random fruit position and check if it's valid
+            bool isInvalid = true;
+            while (isInvalid) {
+                // Generate random fruit coordinates
+                fruit_coords = { (short)(rand() % mapWidth), (short)(rand() % mapHeight) };
+
+                // Set initial validity
+                isInvalid = false;
+
+                // Check if the coordinates overlap with any part of the snake
+                for (const auto& snake2 : snakes) {
+                    for (auto segment = snake2.snake_coords.begin(); segment != snake2.snake_coords.end(); ++segment) {
+                        if (segment->X == fruit_coords.X && segment->Y == fruit_coords.Y) {
+                            isInvalid = true;  // Overlap found, mark as invalid
+                            break;
+                        }
+                    }
+                }
+            }
 
         elements.push_back({{fruit_coords.X, fruit_coords.Y}, "Q "});
 
         score += 10;
         elements.push_back({{(short)5, (short)(mapHeight + 2)}, to_string(score)});
-        tailLen++;
 
     } else {
         // Do not pop tail end if fruit was eaten
-        elements.push_back({{snake_coords.back().X, snake_coords.back().Y}, "  "});
-        snake_coords.pop_back();
+        elements.push_back({{snake.snake_coords.back().X, snake.snake_coords.back().Y}, "  "});
+        snake.snake_coords.pop_back();
     }
 
-    // Move snake
-    if (snake_coords.size() > 0) elements.push_back({{snake_coords[0].X, snake_coords[0].Y}, "o "});
-    snake_coords.insert(snake_coords.begin(), head);
-    elements.push_back({{head.X, head.Y}, "O "});
-
+        // Move snake
+        if (snake.snake_coords.size() > 0) elements.push_back({{snake.snake_coords[0].X, snake.snake_coords[0].Y}, "o "});
+        snake.snake_coords.insert(snake.snake_coords.begin(), head);
+        elements.push_back({{head.X, head.Y}, "O "});
+    }
     return elements;
 }
 //GET USER INPUT
-bool CLASSIC::input() {
+bool CLASSIC_MULTI_COOP::input() { // TEMPORARY ONLY ONE INPUT TAKEN
     while (_kbhit()){
         // Get prevoius direction
-        int last_direction = current_direction;
+        int last_direction = snakes[0].current_direction;
         if (!inputQueue.empty()) last_direction = inputQueue.back();
         switch(_getch()){
             case KEY_LEFT:
@@ -951,12 +968,13 @@ bool CLASSIC::input() {
             case KEY_ESC:
                 gameOver = true;
                 return false;
+                break;
         }
     }
     return true;
 }
 //DRAWING INITIAL FRAME
-void CLASSIC::initial_draw() {
+void CLASSIC_MULTI_COOP::initial_draw() {
     system("cls");
 
     // First row
@@ -964,8 +982,10 @@ void CLASSIC::initial_draw() {
     cout << endl;
 
     // map and columns
-    short headX = snake_coords[0].X;
-    short headY = snake_coords[0].Y;
+    vector<COORD> heads;
+    for (auto snake : snakes) {
+        heads.push_back(snake.snake_coords[0]);
+    }
 
     for(int i = 0; i < mapHeight; i++){
         for(int j = 0; j < mapWidth; j++){
@@ -973,8 +993,11 @@ void CLASSIC::initial_draw() {
             if (j == 0) cout << "# ";
 
             // map
-            if (j == headX && i == headY) cout << "O ";
-            else if (j == fruit_coords.X && i == fruit_coords.Y) cout << "Q ";
+            if (find_if(heads.begin(), heads.end(), [i, j](const COORD& coord) {
+                    return coord.X == i && coord.Y == j;
+                }) != heads.end()) { 
+                    cout << "O "; 
+            } else if (j == fruit_coords.X && i == fruit_coords.Y) cout << "Q ";
             else cout << "  ";
 
             //last column
@@ -994,7 +1017,7 @@ void CLASSIC::initial_draw() {
          << " - Press [ESCAPE] to go back to main menu (progress will be lost).";
 }
 //DRAWING THE GAMEPLAY
-void CLASSIC::draw(redraw const elements) {
+void CLASSIC_MULTI_COOP::draw(redraw const& elements) {
     for (pair<COORD, string> element : elements) {
         write(element.first.X * 2 + 3, element.first.Y + 2, element.second);
     }
@@ -1230,12 +1253,15 @@ EXIT::~EXIT() {}
 bool EXIT::Exit() {
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 2);
     system("cls");
-    cout << "Bye bye";
-    for (int i=0; i < 3; i++){
-        Sleep(400);
-        cout << '.';
+    string snake = "       ~Ooooooooooo";
+    string bye =   "     Bye Bye...    ";
+
+    for (int i=snake.length(); i >=0 ; i--) {
+        Sleep(150);
+        cout << "\r" << snake.substr(snake.length() - i, i) << bye.substr(i);
     }
-    Sleep(750);
+
+    Sleep(1000);
     system("cls");
 
     return true;

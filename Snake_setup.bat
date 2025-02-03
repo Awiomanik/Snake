@@ -25,7 +25,7 @@ IF ERRORLEVEL 1 (
 
 :: Compile the program
 ECHO Compiling the game...
-g++ src/*.cpp src/Snake_res.o -o Snake.exe -lwinmm -lgdi32
+g++ src/Snake_classes_bodies.cpp src/Snake_main.cpp src/Snake_res.o -o Snake.exe -lwinmm -lgdi32
 IF ERRORLEVEL 1 (
     ECHO Compilation failed. Check your source files for errors.
     PAUSE 

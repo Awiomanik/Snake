@@ -75,7 +75,7 @@ public :
     bool executeOption();
 };
 
-class CLASSIC {
+class CLASSIC { 
 public :
     //MAP ATRIBUTES
     short tempo;
@@ -88,7 +88,6 @@ public :
     queue<direction> inputQueue;
 
     //SNAKE ATRIBUTES
-    short tailLen;
     vector<COORD> snake_coords;
     direction current_direction;
 
@@ -117,11 +116,11 @@ public :
     int score;
     enum direction {STOP = 0, LEFT, RIGHT, UP, DOWN};
     queue<direction> inputQueue;
+    short numOfPlayers;
 
     //SNAKE ATRIBUTES
-    vector<short> tailLens;
-    vector<vector<COORD>> snakes_coords;
-    vector<direction> current_directions;
+    struct Snake { vector<COORD> snake_coords; direction current_direction; };
+    vector<Snake> snakes;
 
     friend class Menu;
     friend class HIGHSCORES;
@@ -133,7 +132,7 @@ public :
     void setup();
     redraw logic(bool wheaterMapHasTorusTopology = true);
     void initial_draw();
-    void draw(redraw const head);
+    void draw(redraw const& elements);
     bool input();
 };
 

@@ -1,6 +1,9 @@
 // DEFINITIONS OF USED FUNCTIONS
 #include "Snake_classes.h"
 
+const bool DISPLAY_INTRO = true;
+//const bool DISPLAY_INTRO = false;
+
 //MAIN FUNCTION
 int main(){
     bool finnished = false;
@@ -9,9 +12,11 @@ int main(){
     COORD consoleBufferSize = prepareConsole();
     
     // INTRO
-    Intro introScreen(consoleBufferSize);
-    //introScreen.displayTHX();
-    //introScreen.displayTitle();
+    if (DISPLAY_INTRO) {
+        Intro introScreen(consoleBufferSize);
+        introScreen.displayTHX();
+        introScreen.displayTitle();
+    }
 
     //MENU
     Menu menuScreen;
@@ -85,42 +90,32 @@ void setFontSize(short width, short height) {
     }
 }
 // GET MAXIMUM BUFFER SIZE THAT WILL NOT EXCEED THE SCREEN DIMENTIONS
-COORD getMaxBufferSize(short fontWidth, short fontHeight) { 
+COORD getMaxBufferSize(short fontWidth, short fontHeight) {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hConsole == INVALID_HANDLE_VALUE) {
         std::cerr << "Failed to get console handle.\n";
         return {0, 0};
     }
 
-    // Get screen resolution
+    // Get screen resolution in pixels
     int screenWidth = GetSystemMetrics(SM_CXSCREEN);
     int screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
-    // Get console dimentions
+    // Get console window size in characters
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     if (!GetConsoleScreenBufferInfo(hConsole, &csbi)) {
         std::cerr << "Failed to get console screen buffer info.\n";
         return {0, 0};
     }
-    COORD bufferSize = {
-        static_cast<SHORT>(csbi.srWindow.Right - csbi.srWindow.Left), // Visible columns
-        static_cast<SHORT>(csbi.srWindow.Bottom - csbi.srWindow.Top) // Visible rows
+
+    // Adjust width to avoid overestimation
+    int padding = 5;
+    COORD maxSize = {
+        static_cast<short>((screenWidth / fontWidth) - padding),
+        static_cast<short>(screenHeight / fontHeight)
     };
 
-
-    // Calculate gap
-    COORD gap = {
-        static_cast<SHORT>(screenWidth / bufferSize.X - fontWidth),
-        static_cast<SHORT>(screenHeight / bufferSize.Y - fontHeight)
-    };
-
-    // Calculate number of rows and columns on the screen
-    COORD bufferSizeInt = {
-        static_cast<short>(screenWidth / (fontWidth + gap.X)),
-        static_cast<short>(screenHeight / (fontHeight + gap.Y))
-    };
-
-    return bufferSizeInt;
+    return maxSize;
 }
 // SET BUFFER SIZE
 void setBufferSize(COORD size) {
